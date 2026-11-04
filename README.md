@@ -21,7 +21,7 @@ or release enforcement is claimed by publishing this repository.
 Python 3.9+ is sufficient for policy evaluation and bundle verification.
 
 ```sh
-PYTHONPATH=tooling python3 -m unittest discover -s tests
+PYTHONPATH=tooling:evidence python3 -B -m unittest discover -s tests
 python3 tooling/check_gate.py --project adapters/my-ea.json \
   --change templates/change.example.json --paths templates/paths.example.json \
   --stage before_delegation
@@ -52,8 +52,9 @@ Future policy changes and My EA adoption follow branch, PR and human merge.
 
 ## Evidence and dashboard
 
-The evidence/dashboard work follows the policy publication. It must preserve the
+The local Grafana pilot is described in [the dashboard quick start](docs/dashboard.md).
+It preserves the
 distinction between missing, declared, independently reviewed and automatically
-verified evidence, and show collector freshness and unavailable controls. No
+verified evidence, and shows collector freshness and unavailable controls. No
 confidential collected evidence belongs in this repository. Runtime state is
 excluded by `.gitignore`. See [implementation contract](docs/implementation-contract.md).
