@@ -1,0 +1,18 @@
+name: Verify governance package
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  governance-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify policy and tools
+        env:
+          PYTHONPATH: tooling
+        run: python3 -m unittest discover -s tests

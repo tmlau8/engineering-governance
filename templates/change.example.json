@@ -1,0 +1,21 @@
+{
+  "id": "FIX-EXAMPLE",
+  "profile": "fix",
+  "owner": "tmlau8",
+  "scope": [
+    "Pure title-formatting helper and known callers"
+  ],
+  "acceptance_criteria": [
+    "Agreed whitespace behaviour; empty input safe"
+  ],
+  "uncertainty": null,
+  "additional_triggers": [],
+  "handling": "normal",
+  "evidence": {
+    "planning": {
+      "kind": "compact",
+      "reference": "Synthetic example, not an adopted specification"
+    },
+    "classification_analysis": "Hypothetical: known display-only consumers, no data effects, existing authority and reversible code."
+  }
+}

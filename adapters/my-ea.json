@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "repository": "tmlau8/my-ea",
+  "human_authorities": [
+    "tmlau8"
+  ],
+  "required_checks": [
+    {
+      "name": "reference-integrity",
+      "producer": "github-actions",
+      "workflow": ".github/workflows/architecture-docs.yml",
+      "dependency_paths": [
+        "scripts/docs/**",
+        ".github/actions/**"
+      ]
+    }
+  ],
+  "trigger_paths": {
+    "security": [
+      "**/*[Aa]uth*",
+      "**/*[Pp]rivacy*",
+      "**/*[Ss]ecurity*",
+      "**/*[Kk]eychain*",
+      "**/*.entitlements",
+      "**/*[Pp]ermission*"
+    ],
+    "data": [
+      "**/*[Mm]igration*",
+      "**/*[Ss]chema*",
+      "**/Persistence/**",
+      "**/Models/**"
+    ],
+    "dependency_tool_permission": [
+      "**/Package.swift",
+      "**/Package.resolved",
+      "**/package*.json",
+      "**/*lock*",
+      "**/requirements*.txt",
+      "**/pyproject.toml",
+      ".claude/**",
+      ".codex/**",
+      ".agents/**",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "**/AGENTS.md",
+      "**/CLAUDE.md",
+      "**/.claude/**",
+      "**/.codex/**",
+      "**/.agents/**"
+    ],
+    "infrastructure": [
+      "infra/**",
+      "deploy/**",
+      "**/Dockerfile*",
+      "**/*.tf",
+      "**/project.yml",
+      "**/*[Dd]eploy*"
+    ],
+    "assurance": [
+      ".github/**",
+      ".governance/**",
+      "governance/**",
+      "**/gates.yaml",
+      "**/*[Tt]est*",
+      "**/*[Tt]ests/**",
+      "scripts/**",
+      "**/*[Pp]olicy*",
+      "**/*[Gg]overnance*",
+      "**/AGENTS.md",
+      "**/CLAUDE.md",
+      ".claude/**",
+      ".codex/**",
+      "docs/00-product/ways-of-working.md",
+      "docs/00-product/testing-process.md",
+      "docs/00-product/codex-setup.md"
+    ]
+  }
+}
