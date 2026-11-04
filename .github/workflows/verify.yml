@@ -14,5 +14,6 @@ jobs:
           persist-credentials: false
       - name: Verify policy and tools
         env:
-          PYTHONPATH: tooling
-        run: python3 -m unittest discover -s tests
+          PYTHONPATH: tooling:evidence
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -B -m unittest discover -s tests
