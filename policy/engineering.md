@@ -32,7 +32,7 @@ Resolve load-bearing facts before dependent implementation. If the deciding fact
 
 Applicability: `engineering_baseline`.
 
-A cleared facts-ledger row needs primary evidence and an explicit explanation connecting that evidence to the claim. If either is missing or does not support the claim, the row is BLOCKED.
+A cleared facts-ledger row needs the primary-source quote column and an explicit connecting-line explanation showing how that quotation decides the actual claim. If either is missing or does not support the claim, the row is BLOCKED.
 
 ## CODE-005 — Verify the actual success requirement, not an adjacent proxy
 
@@ -98,7 +98,7 @@ For user interfaces, prefer native/proven platform controls, navigation, integra
 
 Applicability: `frontend_ux_profile`.
 
-For a new or changed primary action, demonstrate discoverability before implementation using a mock or explicit hardest-case walkthrough, including zero/one-item states. A component-level prose review alone is insufficient.
+For a new or changed primary action, demonstrate discoverability before implementation using a mock or explicit hardest-case walkthrough, including zero/one-item states. Include “found unaided” as an acceptance criterion. A component-level prose review alone is insufficient.
 
 ## CODE-016 — Research proven packages, APIs and standards before hand-rolling
 
@@ -128,7 +128,7 @@ Create or update a specification with scope, acceptance criteria and impact anal
 
 Applicability: `engineering_baseline`.
 
-Implement on an ordinary feature branch and submit a PR. Agents do not commit or merge to protected default branches or distribute/deploy without explicit authority. The authorised human controls merge and separately authorises release. Preserve parent/child feature scope across PRs.
+Implement on an ordinary feature branch and submit a PR. Agents never commit or merge directly to master/main/default branches, regardless of whether native branch protection is available, or distribute/deploy without explicit authority. The authorised human controls merge and separately authorises release. Preserve parent/child feature scope across PRs.
 
 ## CODE-021 — Independent specialist review triggered by unproven correctness properties
 

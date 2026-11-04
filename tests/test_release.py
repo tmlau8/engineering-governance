@@ -55,5 +55,17 @@ class ReleaseTests(unittest.TestCase):
                 p = Path(tmp) / "project.json"; p.write_text(json.dumps(adapter))
                 with self.assertRaises(ValueError): load_policy(project_path=p)
 
+    def test_unlisted_cache_nested_manifest_and_symlink_directory_fail(self):
+        for name in ["tooling/__pycache__/unverified.pyc", "tooling/manifest.json"]:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp) / "bundle"; built = build(root)
+                extra = root / name; extra.parent.mkdir(parents=True, exist_ok=True)
+                extra.write_bytes(b"not released")
+                with self.assertRaises(ValueError): verify(root, built["manifest_sha256"])
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "bundle"; built = build(root)
+            (root / "empty-link").symlink_to(tmp, target_is_directory=True)
+            with self.assertRaises(ValueError): verify(root, built["manifest_sha256"])
+
 
 if __name__ == "__main__": unittest.main()

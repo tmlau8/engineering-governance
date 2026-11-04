@@ -21,6 +21,9 @@ Use the release asset or build the bundle from the exact release commit with
 `python3 tooling/build_release.py --output <new-directory>`. Its output records the
 manifest digest. Verify installed bytes with a trusted verifier and the digest
 from the approved adoption record, never candidate-provided code/pins.
+Run vendored Python tools with `python3 -B` (or `PYTHONDONTWRITEBYTECODE=1`) so
+execution does not create unmanifested caches. Any extra file, including bytecode
+or a nested manifest, fails exact-inventory verification.
 
 The project adapter has only `schema_version`, `repository`, `human_authorities`,
 `required_checks`, `trigger_paths`. It cannot change common gates, delete mandatory

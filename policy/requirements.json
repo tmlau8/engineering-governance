@@ -39,7 +39,7 @@
     {
       "id": "CODE-004",
       "title": "Facts-ledger evidence must directly support a cleared claim",
-      "requirement": "A cleared facts-ledger row needs primary evidence and an explicit explanation connecting that evidence to the claim. If either is missing or does not support the claim, the row is BLOCKED.",
+      "requirement": "A cleared facts-ledger row needs the primary-source quote column and an explicit connecting-line explanation showing how that quotation decides the actual claim. If either is missing or does not support the claim, the row is BLOCKED.",
       "applicability": "engineering_baseline",
       "source_reference": {
         "source_id": "claude-engineering-discipline",
@@ -160,7 +160,7 @@
     {
       "id": "CODE-015",
       "title": "Demonstrate primary-action discoverability with a mock or walkthrough",
-      "requirement": "For a new or changed primary action, demonstrate discoverability before implementation using a mock or explicit hardest-case walkthrough, including zero/one-item states. A component-level prose review alone is insufficient.",
+      "requirement": "For a new or changed primary action, demonstrate discoverability before implementation using a mock or explicit hardest-case walkthrough, including zero/one-item states. Include “found unaided” as an acceptance criterion. A component-level prose review alone is insufficient.",
       "applicability": "frontend_ux_profile",
       "source_reference": {
         "source_id": "claude-engineering-discipline",
@@ -215,7 +215,7 @@
     {
       "id": "CODE-020",
       "title": "Implement on branches and PRs; human controls merge/distribution",
-      "requirement": "Implement on an ordinary feature branch and submit a PR. Agents do not commit or merge to protected default branches or distribute/deploy without explicit authority. The authorised human controls merge and separately authorises release. Preserve parent/child feature scope across PRs.",
+      "requirement": "Implement on an ordinary feature branch and submit a PR. Agents never commit or merge directly to master/main/default branches, regardless of whether native branch protection is available, or distribute/deploy without explicit authority. The authorised human controls merge and separately authorises release. Preserve parent/child feature scope across PRs.",
       "applicability": "engineering_baseline",
       "source_reference": {
         "source_id": "my-ea-agents",

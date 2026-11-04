@@ -27,7 +27,12 @@ def verify(root, expected_manifest_sha256):
             raise ValueError("Symlinks/outside paths are forbidden")
         if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             raise ValueError("Bundle file differs: " + name)
-    actual = {str(p.relative_to(root)) for p in root.rglob("*") if p.is_file() and ".git" not in p.relative_to(root).parts and "__pycache__" not in p.relative_to(root).parts and p.name != "manifest.json"}
+    inventory = list(root.rglob("*"))
+    if any(p.is_symlink() for p in inventory):
+        raise ValueError("Bundle symlinks are forbidden")
+    # Bytecode caches can execute before source; they cannot be ignored here.
+    # Only the root manifest is outside its own file inventory.
+    actual = {str(p.relative_to(root)) for p in inventory if p.is_file() and p != manifest_file}
     if actual != set(manifest["files"]):
         raise ValueError("Bundle has unexpected or missing files")
     return {"result": "satisfied", "policy_version": manifest["version"], "files_verified": len(actual)}
