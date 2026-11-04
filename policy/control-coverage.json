@@ -1,0 +1,351 @@
+{
+  "as_of": "2026-11-04",
+  "scope": "Implementation status, not repeal or normative priority of standing source rules.",
+  "enforced": 0,
+  "detected": 3,
+  "guidance_only": 35,
+  "requirements": [
+    {
+      "id": "CODE-001",
+      "title": "Verify changing external facts from primary sources before relying on them",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-002",
+      "title": "Perform verification available to the agent before asking the user",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-003",
+      "title": "Resolve load-bearing facts before dependent work",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-004",
+      "title": "Facts-ledger evidence must directly support a cleared claim",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-005",
+      "title": "Verify the actual success requirement, not an adjacent proxy",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-006",
+      "title": "Unvalidated status changes only on new supporting evidence",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-007",
+      "title": "Use the smallest feasibility spike before building on unresolved assumptions",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-008",
+      "title": "Validate real platform/integration behaviour beyond configuration/build success",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-009",
+      "title": "Escalate scope-narrowing discoveries and confirm real entry points",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-010",
+      "title": "Complete a before-build concern checklist with explicit dispositions",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-011",
+      "title": "Perform proportionate design review before and code review after",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-012",
+      "title": "Separate automated checks from real-runtime regression evidence",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-013",
+      "title": "Scale review depth to the cost of reversing the mistake",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-014",
+      "title": "Prefer native/proven interaction patterns and visible primary actions",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-015",
+      "title": "Demonstrate primary-action discoverability with a mock or walkthrough",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-016",
+      "title": "Research proven packages, APIs and standards before hand-rolling",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-017",
+      "title": "State a viable undo before destructive or data-changing work",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-018",
+      "title": "Define how failures become observable without manual discovery",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-019",
+      "title": "Spec and acceptance criteria before code",
+      "status": "detected",
+      "coverage": "partial",
+      "basis": "Detects presence of planning, scope, criteria and classification. Does not prove they preceded implementation or are semantically adequate.",
+      "priority": "pilot",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-020",
+      "title": "Implement on branches and PRs; human controls merge/distribution",
+      "status": "detected",
+      "coverage": "partial",
+      "basis": "Detects current-revision authorised account acceptance/release records. Does not enforce merge, prove physical human identity or grant release.",
+      "priority": "pilot",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-021",
+      "title": "Independent specialist review triggered by unproven correctness properties",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-022",
+      "title": "Review requires inspectable evidence, not verbal clearance",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-023",
+      "title": "Builder cannot self-certify triggered work through an inline persona",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-024",
+      "title": "Adversarial challenge for triggered assumptions and evidence",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-025",
+      "title": "Independent review of every substantive user-facing update and honest contribution record",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-026",
+      "title": "Missing independent review blocks dependent work",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-027",
+      "title": "Testability and negative/boundary/lifecycle/end-to-end evidence before Ready",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-028",
+      "title": "Project checks and explicit device-test debt",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-029",
+      "title": "Preserve unrelated local work and stage only intentional changes",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-030",
+      "title": "Codex uses explicit gstack preflight; Claude hooks are client-specific",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-031",
+      "title": "Close affected canonical documentation and evidence within the feature change",
+      "status": "detected",
+      "coverage": "partial",
+      "basis": "Checks the configured architecture-doc workflow result/provenance when present. Does not certify all semantic documentation closure.",
+      "priority": "pilot",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-032",
+      "title": "Material workflow/tooling departures need prior agreement",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-033",
+      "title": "Keep secrets out of version control",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-034",
+      "title": "Essential-flow impact evidence tied to final snapshot",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-035",
+      "title": "Verify end-to-end role operability without substituting another role",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-036",
+      "title": "Keep classified project/member/source material outside repositories",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-037",
+      "title": "Canonical source ownership and reproducible developer-reference derivatives",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-038",
+      "title": "Project architecture, migration and extension source boundaries",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    }
+  ]
+}

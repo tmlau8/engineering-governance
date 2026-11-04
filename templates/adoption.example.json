@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "status": "example_not_adopted",
+  "repository": null,
+  "policy_source": {
+    "repository": "tmlau8/engineering-governance",
+    "commit_sha": null,
+    "version": "1.0.0-rc.1",
+    "manifest_sha256": null
+  },
+  "bundle_path": ".governance/baseline",
+  "project_path": ".governance/project.json"
+}
