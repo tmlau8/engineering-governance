@@ -9,11 +9,16 @@ from verify_bundle import verify
 
 
 class ReleaseTests(unittest.TestCase):
-    def test_catalogue_preserves_38_unique_rules(self):
+    def test_generated_policy_and_reproducible_bundles(self):
+        from check_package import check
+        check()
+    def test_catalogue_preserves_50_unique_rules(self):
         rules = json.loads((ROOT / "policy/requirements.json").read_text())["rules"]
-        self.assertEqual({r["id"] for r in rules}, {f"CODE-{n:03d}" for n in range(1, 39)})
-        self.assertEqual(len(rules), 38)
+        self.assertEqual({r["id"] for r in rules}, {f"CODE-{n:03d}" for n in range(1, 51)})
+        self.assertEqual(len(rules), 50)
         self.assertTrue(all(r["requirement"] and r["applicability"] and r["mandatory_when_applicable"] for r in rules))
+        original = json.dumps(rules[:38],sort_keys=True,separators=(',',':')).encode()
+        self.assertEqual(hashlib.sha256(original).hexdigest(),'95ea3bcf92f76bd94ecb24371d506c074134e5337949866dbb3379f1f82eca45')
 
     def test_manifest_and_file_tampering(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -22,7 +22,12 @@
       "**/*[Ss]ecurity*",
       "**/*[Kk]eychain*",
       "**/*.entitlements",
-      "**/*[Pp]ermission*"
+      "**/*[Pp]ermission*",
+      "**/*[Tt]oken*",
+      "**/*[Cc]redential*",
+      "**/*[Ss]ession*",
+      "**/*[Ll]ogin*",
+      "**/Info.plist"
     ],
     "data": [
       "**/*[Mm]igration*",
@@ -34,7 +39,6 @@
       "**/Package.swift",
       "**/Package.resolved",
       "**/package*.json",
-      "**/*lock*",
       "**/requirements*.txt",
       "**/pyproject.toml",
       ".claude/**",
@@ -46,7 +50,13 @@
       "**/CLAUDE.md",
       "**/.claude/**",
       "**/.codex/**",
-      "**/.agents/**"
+      "**/.agents/**",
+      "**/*.lock",
+      "**/Podfile.lock",
+      "**/Gemfile.lock",
+      "**/yarn.lock",
+      "**/pnpm-lock.yaml",
+      "**/Cargo.lock"
     ],
     "infrastructure": [
       "infra/**",

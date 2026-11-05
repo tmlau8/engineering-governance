@@ -1,5 +1,11 @@
 import copy
+import contextlib
+import io
+import json
+from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 from github_gate import collect
 from test_gate import POLICY, SHA, change
 
@@ -34,6 +40,26 @@ class FakeAPI:
 
 
 class AdapterTests(unittest.TestCase):
+    def test_cli_uses_explicit_bounded_bundle_and_external_builder(self):
+        from github_gate import main
+        from load_policy import ROOT
+        from review_fixtures import bundle,subject
+        api=FakeAPI();api.files=[{'filename':'Auth.swift'}]
+        c=change();c['evidence'].update(planning={'kind':'full','reference':'spec'},risk_analysis='impact',review_plan='reviewers',risk_review='records')
+        api.pr['body']='```governance\n'+json.dumps(c)+'\n```'
+        expected=subject(SHA,'2'*40,['security']);expected['change_id']=c['id']
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)/'reviews.json';p.write_text(json.dumps(bundle(expected)))
+            args=['github_gate.py','--repo','tmlau8/my-ea','--pr','1','--project',str(ROOT/'adapters/my-ea.json'),'--review-bundle',str(p),'--builder-id',expected['builder_id'],'--builder-session-id',expected['builder_session_id']]
+            output=io.StringIO()
+            with patch('sys.argv',args),patch.dict('os.environ',{'GH_TOKEN':'fixture-token'}),patch('github_gate.GitHub',return_value=api),contextlib.redirect_stdout(output):
+                code=main()
+            report=json.loads(output.getvalue())
+            self.assertEqual(report['review_validation']['result'],'metadata_conforming')
+            self.assertEqual(code,1) # No checks/acceptance: review metadata must not invent readiness.
+            self.assertFalse(report['acceptance_basis']['physical_human_verified'])
+            self.assertNotIn('fixture-token',output.getvalue())
+
     def test_rename_checks_old_and_new_path(self):
         api = FakeAPI(); api.files = [{"filename": "MyEA/Helper.swift", "previous_filename": "MyEA/Security.swift"}]
         _, paths, _ = collect(api, "tmlau8/my-ea", 1, POLICY)

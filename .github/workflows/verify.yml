@@ -8,12 +8,24 @@ permissions:
 jobs:
   governance-package:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.9', '3.12']
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install pinned review validator
+        run: python3 -m pip install --require-hashes -r tooling/requirements-review.lock
       - name: Verify policy and tools
         env:
           PYTHONPATH: tooling:evidence
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 -B -m unittest discover -s tests
+      - name: Verify generated policy and reproducible bundles
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -B tooling/check_package.py

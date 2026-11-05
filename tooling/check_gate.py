@@ -30,6 +30,8 @@ def matches(path, pattern):
 def evaluate(policy, change, paths, stage, facts=None):
     facts = facts or {}
     errors, detections = [], []
+    acceptance = {"records": [], "physical_human_verified": False, "independent_authority_verified": False,
+        "limitation": "Account metadata cannot distinguish an agent using a human credential from a physical human."}
     if stage not in STAGES:
         raise ValueError("Unknown gate")
     if not isinstance(change, dict) or not isinstance(facts, dict):
@@ -94,17 +96,42 @@ def evaluate(policy, change, paths, stage, facts=None):
         elif requirement == "human_acceptance":
             accepted = any(isinstance(v, dict) and v.get("actor") in policy["human_authorities"] and v.get("actor_type") == "User" and v.get("state") == "APPROVED" and v.get("commit") == revision for v in facts.get("reviews", []))
             if not revision or not accepted:
-                errors.append("Missing authorised human acceptance for inspected revision")
+                errors.append("Missing authorised account acceptance metadata for inspected revision; human identity unverified")
+            for value in facts.get("reviews", []):
+                if isinstance(value, dict) and value.get("state") == "APPROVED" and value.get("commit") == revision:
+                    acceptance["records"].append({"actor": value.get("actor"), "actor_type": value.get("actor_type"),
+                        "source": value.get("source", "supplied_unverified"),
+                        "basis": "self_acceptance" if value.get("self_acceptance") or value.get("actor") == facts.get("pr_author") else "account_approval_identity_unverified"})
+            if any(isinstance(v, dict) and v.get("state") == "CHANGES_REQUESTED" and v.get("actor_type") == "User" for v in facts.get("reviews", [])):
+                errors.append("Active human change request remains unresolved")
         elif requirement == "release_authorization":
             auth = facts.get("release_authorization", {})
             if not isinstance(auth, dict) or auth.get("actor") not in policy["human_authorities"] or auth.get("actor_type") != "User" or not revision or auth.get("commit") != revision or not present(auth.get("reference")):
                 errors.append("Missing authorised revision-specific release decision")
         elif not present(evidence.get(requirement)):
             errors.append("Missing evidence: " + requirement)
+    review_validation = {"result": "not_required_at_this_stage"}
+    if detections and stage in ("before_merge", "before_release"):
+        if not isinstance(facts.get("review_bundle"), dict):
+            errors.append("Required review-record transport/evidence unavailable")
+            review_validation = {"result": "unavailable"}
+        else:
+            try:
+                from review_records import validate_set
+                subject = {"repository": policy["pilot_repository"], "change_id": change["id"], "policy_version": policy["version"], "head_sha": revision,
+                    "base_sha": facts.get("base_sha"), "trigger_ids": sorted({d["trigger"] for d in detections}),
+                    "builder_id": facts.get("builder_id"), "builder_session_id": facts.get("builder_session_id")}
+                if facts.get("account_sha256"): subject["account_sha256"] = facts["account_sha256"]
+                review_validation = validate_set(facts["review_bundle"], subject)
+                if review_validation["result"] != "metadata_conforming": errors.append("Required review-record set is not metadata conforming")
+            except Exception:
+                errors.append("Review-record validation unavailable or invalid")
+                review_validation = {"result": "failed"}
     return {
         "policy_version": policy["version"], "change": change.get("id"), "stage": stage,
         "profile": profile, "risk": risk, "specification": row["planning"],
-        "triggers": detections, "head_sha": revision, "result": "failed" if errors else "satisfied",
+        "triggers": detections, "head_sha": revision, "result": "failed" if errors else "metadata_conforming",
+        "assurance": "metadata_only_not_semantic_clearance_or_enforcement", "acceptance_basis": acceptance, "review_validation": review_validation,
         "errors": errors, "required_evidence": requirements,
         "control_status": "detected", "facts_source": facts.get("source", "supplied_unverified"),
         "limitation": "Presence checks do not certify semantic evidence or enforcement; required branch protection is separate."
@@ -122,8 +149,7 @@ def main():
     parser.add_argument("--report")
     args = parser.parse_args()
     try:
-        def read(path):
-            return json.loads(Path(path).read_text())
+        from review_records import read
         result = evaluate(load_policy(args.policy, args.project), read(args.change), read(args.paths), args.stage, read(args.facts) if args.facts else {})
     except (ValueError, KeyError, TypeError, OSError) as error:
         result = {"result": "failed", "control_status": "detected", "errors": [str(error)]}
@@ -131,7 +157,7 @@ def main():
     if args.report:
         Path(args.report).write_text(rendered)
     print(rendered, end="")
-    return 0 if result["result"] == "satisfied" else 1
+    return 0 if result["result"] == "metadata_conforming" else 1
 
 
 if __name__ == "__main__":

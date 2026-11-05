@@ -7,6 +7,10 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def load_policy(policy_path=None, project_path=None):
     baseline = json.loads(Path(policy_path or ROOT / "policy/gates.yaml").read_text())
+    if baseline.get("review_requirements") != "review-requirements.json":
+        raise ValueError("Unknown/missing review requirement contract")
+    from review_records import load_requirements
+    load_requirements()
     if project_path is None:
         raise ValueError("An explicit trusted project adapter is required")
     project = json.loads(Path(project_path).read_text())

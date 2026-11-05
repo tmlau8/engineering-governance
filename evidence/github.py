@@ -106,7 +106,7 @@ def observe(api, repo, number, policy):
     if declaration is not None:
         try:
             preflight = evaluate(policy, declaration, paths, "before_delegation")
-            metadata_gate = "metadata_satisfied" if preflight["result"] == "satisfied" else "metadata_incomplete"
+            metadata_gate = "metadata_conforming" if preflight["result"] == "metadata_conforming" else "metadata_incomplete"
             # Detector errors use trusted field/check names, never raw declaration text.
             errors = [e[:160] for e in preflight["errors"][:20]]
         except (ValueError, TypeError, KeyError):

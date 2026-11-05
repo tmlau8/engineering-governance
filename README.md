@@ -1,8 +1,9 @@
 # Engineering governance
 
-Shared coding and agentic-engineering policy, release **1.0.0-rc.1**. This private
-trial baseline preserves 38 existing coding requirements and the accepted compact
-workflow. It is independent of Codex or Claude Code.
+Shared coding and agentic-engineering policy, **unreleased candidate 1.1.0-rc.1**.
+It preserves the original 38 requirements and adds 12 agentic requirements.
+Published 1.0.0-rc.1 and existing adopter pins remain unchanged. The candidate is
+tool-neutral; current shared-account credentials do not satisfy its identity target.
 
 Start with [the policy](policy/engineering.md), [workflow rules](policy/workflow.md)
 and [the adoption guide](docs/adoption.md). The maintained requirement source is
@@ -18,17 +19,23 @@ or release enforcement is claimed by publishing this repository.
 
 ## Quick start
 
-Python 3.9+ is sufficient for policy evaluation and bundle verification.
+Python 3.9+ is supported. Review validation adds hash-locked dependencies;
+bundle byte verification remains standard-library-only.
 
 ```sh
-PYTHONPATH=tooling:evidence python3 -B -m unittest discover -s tests
+python3 -m venv .venv
+.venv/bin/python -m pip install --require-hashes -r tooling/requirements-review.lock
+PYTHONPATH=tooling:evidence .venv/bin/python -B -m unittest discover -s tests
 python3 tooling/check_gate.py --project adapters/my-ea.json \
   --change templates/change.example.json --paths templates/paths.example.json \
   --stage before_delegation
-python3 tooling/build_release.py --output /tmp/engineering-governance-rc1
+python3 -B tooling/check_package.py
 ```
 
-The change example is explicitly synthetic. Replace it with a real specification
+The change and [review examples](docs/review-records.md) are explicitly synthetic.
+The evaluator reports **metadata_conforming**, never semantic clearance or verified
+human identity. Triggered merge/release checks fail closed without a complete
+revision-bound review bundle. Replace examples with a real specification
 and impact analysis. Adding a regression test routes the fix high under the
 accepted rule; use a focused full spec and the required review evidence.
 
@@ -45,10 +52,9 @@ cannot approve itself by editing its adoption pin and manifest together. Require
 merge checks need an eligible GitHub plan and actual configured protection; release
 authorisation needs a separate release boundary.
 
-This initial private release may point to the independently reviewed bootstrap
-candidate while its source PR awaits human merge. The release records the exact
-commit. Publication authorisation is not a merge or deployment authorisation.
-Future policy changes and My EA adoption follow branch, PR and human merge.
+The published initial release records an exact immutable source commit. Candidate
+changes do not replace it. Publication authorisation is separate from merge or
+deployment authority. Future policy and My EA adoption changes use ordinary PRs.
 
 ## Evidence and dashboard
 
