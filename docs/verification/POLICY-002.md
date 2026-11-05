@@ -41,6 +41,10 @@ as premises. Trusted human instructions remain part of the instruction hierarchy
 - The generated policy matches its maintained source. Two independently built
   23-file candidate bundles have identical manifests and verify exactly. CI now
   installs the hash lock, tests Python 3.9/3.12 and repeats the package checks.
+  The first remote attempt failed before tests because ubuntu-latest selected
+  Ubuntu 26.04 without a Python 3.9 build. The official actions/python-versions
+  manifest lists Python 3.9.25 for Ubuntu 24.04; the runner is pinned to that
+  supported image while keeping both versions and every test required.
   `verify_bundle.py` retains its inventory `satisfied` API; the aggregate package
   check reports `byte_integrity_verified`. Neither is a governance clearance.
 - All real Grafana panel/filter queries passed. Builder used gstack login and
