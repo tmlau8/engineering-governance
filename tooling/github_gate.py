@@ -9,6 +9,7 @@ import urllib.request
 from pathlib import Path
 from check_gate import evaluate
 from load_policy import load_policy
+from review_records import loads, read
 
 
 class GitHub:
@@ -44,7 +45,7 @@ def collect(api, repo, number, policy):
     blocks = re.findall(r"```governance\s*\n(.*?)\n```", pr.get("body") or "", re.S)
     if len(blocks) != 1:
         raise ValueError("PR body needs exactly one governance JSON block")
-    change = json.loads(blocks[0])
+    change = loads(blocks[0])
     files = api.pages(f"repos/{repo}/pulls/{number}/files")
     if len(files) != pr["changed_files"]:
         raise ValueError("Incomplete changed-file list")
@@ -87,7 +88,7 @@ def collect(api, repo, number, policy):
     current = api.get(f"repos/{repo}/pulls/{number}")
     if any(current[k] != pr[k] for k in ("updated_at", "body", "state", "draft")) or current["head"]["sha"] != sha or current["base"]["sha"] != pr["base"]["sha"]:
         raise ValueError("PR changed during collection; rerun the gate")
-    return change, paths, {"source": "github_api_snapshot", "head_sha": sha, "checks": checks, "reviews": list(latest.values())}
+    return change, paths, {"source": "github_api_snapshot", "head_sha": sha, "base_sha": pr["base"]["sha"], "pr_author": pr["user"]["login"], "checks": checks, "reviews": list(latest.values())}
 
 
 def main():
@@ -97,6 +98,9 @@ def main():
     p.add_argument("--stage", default="before_merge", choices=["before_delegation", "before_merge"])
     p.add_argument("--report")
     p.add_argument("--project", required=True)
+    p.add_argument("--review-bundle", help="Explicit operator-supplied bounded local review bundle; never read from a PR path")
+    p.add_argument("--builder-id", help="Externally supplied logical builder identity, not inferred from review records")
+    p.add_argument("--builder-session-id", help="Externally supplied builder session")
     args = p.parse_args()
     try:
         if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.repo) or args.pr <= 0:
@@ -106,8 +110,13 @@ def main():
             raise ValueError("Repository differs from the selected pilot")
         token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
         if not token:
-            raise ValueError("Read-only GitHub token required in GH_TOKEN")
+            raise ValueError("GitHub credential with read access required in GH_TOKEN; actual authority may be broader")
         change, paths, facts = collect(GitHub(token), args.repo, args.pr, policy)
+        if args.review_bundle:
+            if not args.builder_id or not args.builder_session_id:
+                raise ValueError("Review bundle requires external builder identity/session")
+            facts.update(review_bundle=read(args.review_bundle), builder_id=args.builder_id, builder_session_id=args.builder_session_id,
+                source="github_snapshot_with_operator_supplied_review_metadata")
         report = evaluate(policy, change, paths, args.stage, facts)
     except Exception as error:
         report = {"result": "failed", "control_status": "detected", "errors": [str(error)]}
@@ -115,7 +124,7 @@ def main():
     if args.report:
         Path(args.report).write_text(data)
     print(data, end="")
-    return 0 if report["result"] == "satisfied" else 1
+    return 0 if report["result"] == "metadata_conforming" else 1
 
 
 if __name__ == "__main__":

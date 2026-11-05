@@ -164,10 +164,10 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(s.records()[0]["data"]["state"], "success")
         self.assertEqual(s.health()[0]["status"], "error")
 
-    def test_stale_empty_and_38_rules_are_not_green(self):
+    def test_stale_empty_and_50_rules_are_not_green(self):
         self.assertIsNone(overview(self.store, "all")[0]["Changes inspected"])
         self.assertEqual(health(self.store, "all")[0]["Status"], "not_collected")
-        self.assertEqual(len(rule_coverage(self.store, "all")), 38)
+        self.assertEqual(len(rule_coverage(self.store, "all")), 50)
         self.assertTrue(all(r["Semantic assurance"] == "unknown" for r in rule_coverage(self.store, "all")))
         self.store.snapshot("github:tmlau8/my-ea", {}, at="2026-01-01T00:00:00Z")
         self.assertEqual(health(self.store, "all")[0]["Freshness"], "stale")
@@ -202,6 +202,13 @@ class FakeAPI:
 
 class GithubEvidenceTests(unittest.TestCase):
     def setUp(self): self.policy = load_policy(project_path=ROOT / "adapters/my-ea.json")
+
+    def test_new_detector_result_and_legacy_result_are_not_confused(self):
+        from test_gate import change
+        api=FakeAPI();api.pr['body']='```governance\n'+json.dumps(change())+'\n```'
+        self.assertEqual(observe(api,'tmlau8/my-ea',73,self.policy)['metadata_gate'],'metadata_conforming')
+        with patch('check_gate.evaluate',return_value={'result':'satisfied','errors':[]}):
+            self.assertEqual(observe(api,'tmlau8/my-ea',73,self.policy)['metadata_gate'],'metadata_incomplete')
 
     def test_historical_merge_is_observation_not_readiness(self):
         api = FakeAPI(); api.pr.update({"state": "closed", "merged_at": at(2), "merged_by": {"login": "tmlau8", "private": "PRIVATE_SENTINEL"}})

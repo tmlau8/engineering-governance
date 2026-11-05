@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-rc.1",
+  "version": "1.1.0-rc.1",
   "format": "JSON-compatible YAML; parsed with the Python standard library",
   "enabled_profiles": [
     "fix"
@@ -177,5 +177,6 @@
       "**/*[Pp]olicy*",
       "**/*[Gg]overnance*"
     ]
-  }
+  },
+  "review_requirements": "review-requirements.json"
 }

@@ -37,7 +37,7 @@ def rule_coverage(store, repo):
         observed = 0
         note = "No semantic evidence collected; requirement remains mandatory when applicable"
         if code == "CODE-019":
-            observed = sum(r["metadata_gate"] == "metadata_satisfied" for r in records)
+            observed = sum(r["metadata_gate"] == "metadata_conforming" for r in records)
             note = "Planning metadata only; does not prove spec preceded implementation or is adequate"
         elif code == "CODE-020":
             observed = sum(r["state"] == "merged" for r in records)
@@ -49,7 +49,7 @@ def rule_coverage(store, repo):
         if code == "CODE-035":
             applicability = "N/A for single-user My EA; conditional for role-based projects"
         if adopted:
-            applicability = adopted[0].get("applicability", {}).get(code, "unknown")
+            applicability = adopted[0].get("applicability", {}).get(code, "not_in_recorded_adoption")
         result.append({"Rule": code, "Requirement": rule["title"], "Applicability": applicability,
             "Automation": coverage[code]["status"], "Observed subset": observed,
             "Changes inspected": len(records), "Semantic assurance": "unknown", "Enforced": "not demonstrated", "Evidence limit": note,
@@ -105,11 +105,12 @@ def overview(store, repo):
     reported_times = [r["reported_turn_seconds"] for r in usage_ if r["reported_turn_seconds"] is not None]
     github_observed = any(r["source"].startswith("github:") and r["succeeded_at"] and (repo == "all" or r["source"] == "github:" + repo) for r in store.health())
     return [{"Changes inspected": len(changes_) if github_observed else None, "Open changes": sum(r["state"] == "open" for r in changes_) if github_observed else None,
-        "Missing planning metadata": sum(r["metadata_gate"] != "metadata_satisfied" for r in changes_) if github_observed else None,
+        "Missing planning metadata": sum(r["metadata_gate"] != "metadata_conforming" for r in changes_) if github_observed else None,
+        "Candidate catalogue version": json.loads((ROOT / "policy/gates.yaml").read_text())["version"],
         "Policy version": adoption[0]["policy_version"] if adoption else "not observed for selected repository",
         "Policy commit": adoption[0]["policy_commit"] if adoption else None,
         "Native merge boundary": protection[0]["status"] if protection else "not observed",
-        "Enforced requirements": 0, "Requirements in catalogue": 38,
+        "Enforced requirements": 0, "Requirements in catalogue": len(json.loads((ROOT / "policy/requirements.json").read_text())["rules"]),
         "Usage sessions": len(usage_), "Reported token sum (eligible sessions)": sum(r["total_tokens"] for r in exact) if exact else None,
         "Sessions with reported time": len(reported_times),
         "Sessions excluded from exact sum": len(usage_) - len(exact), "PR-linked usage sessions": 0,
@@ -119,7 +120,7 @@ def overview(store, repo):
 
 def summary(store, repo):
     value = overview(store, repo)[0]
-    fields = ["Policy version", "Policy commit", "Native merge boundary", "Enforced requirements", "Changes inspected", "Usage sessions", "Sessions excluded from exact sum", "Sessions with reported time", "PR-linked usage sessions", "Cost"]
+    fields = ["Candidate catalogue version", "Policy version", "Policy commit", "Native merge boundary", "Enforced requirements", "Changes inspected", "Usage sessions", "Sessions excluded from exact sum", "Sessions with reported time", "PR-linked usage sessions", "Cost"]
     return [{"Measure": key, "Observation": str(value[key]) if value[key] is not None else "Unknown / not collected"} for key in fields]
 
 

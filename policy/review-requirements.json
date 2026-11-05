@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "stage": "before_merge",
+  "applies_when": "any_trigger_detected",
+  "all_triggered": {
+    "adversarial": 1,
+    "quality": 1
+  },
+  "per_detected_trigger": {
+    "specialist": 1
+  },
+  "counted_outcomes": [
+    "cleared"
+  ],
+  "principal": "Each substantive account is reviewed separately, bound by SHA256; not implied by merge review."
+}
