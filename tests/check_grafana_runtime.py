@@ -38,7 +38,8 @@ def main(action):
     live = dashboard()
     panels = [p for p in live["panels"] if "targets" in p]
     panels += [p for row in live["panels"] if row["type"] == "row" for p in row["panels"]]
-    for repo in ["all", "tmlau8/my-ea", "tmlau8/engineering-governance"]:
+    settings=json.loads((ROOT/'.runtime/settings.json').read_text())
+    for repo in ['all',*settings['repositories']]:
         for panel in panels:
             target = copy.deepcopy(panel["targets"][0]); target["datasource"] = panel["datasource"]
             target["url"] = target["url"].replace("${repo:percentencode}", urllib.parse.quote(repo, safe=""))

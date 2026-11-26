@@ -5,6 +5,7 @@ from pathlib import Path
 UID = "agentic-engineering-evidence"
 DS = {"type": "yesoreyeram-infinity-datasource", "uid": "governance-evidence"}
 COLUMNS = {
+    'workspaces':['Workspace','Branch','Effective approved policy','Local files','Issues','Inventory status','Freshness'],
     "summary": ["Measure", "Observation"],
     "changes": ["Change", "State", "Profile", "Risk", "Planning metadata", "Checks", "PR evidence"],
     "rules": ["Rule", "Requirement", "Applicability", "Automation", "Semantic assurance", "Evidence limit"],
@@ -18,7 +19,8 @@ def query(view, port):
     return {"refId": "A", "type": "json", "source": "url", "format": "table", "parser": "backend", "root_selector": "", "url": f"http://127.0.0.1:{port}/api/{view}?repo=${{repo:percentencode}}", "url_options": {"method": "GET"}, "columns": []}
 
 
-def dashboard(api_port=8769):
+def dashboard(api_port=8769, repositories=None):
+    repositories=list(dict.fromkeys(['all',*(repositories or ['tmlau8/my-ea','tmlau8/engineering-governance'])]))
     panels = []
     def text(title, body, y, h=3):
         panels.append({"id": len(panels)+1, "type": "text", "title": title, "gridPos": {"x": 0, "y": y, "w": 24, "h": h}, "options": {"mode": "markdown", "content": body}})
@@ -32,9 +34,9 @@ def dashboard(api_port=8769):
         panels[-1]["fieldConfig"]["defaults"]["custom"]["minWidth"] = 110
         if view == "summary":
             panels[-1]["fieldConfig"]["overrides"].append({"matcher": {"id": "byName", "options": "Measure"}, "properties": [{"id": "custom.width", "value": 290}]})
-    text("Engineering governance · local pilot", "**Observed evidence and visible gaps.** All applicable policy remains mandatory; **0 requirements are claimed enforced**. My EA's private plan has no native merge protection. ¹ Planning gaps include historical PRs predating adoption; they are not retrospective violations. ² Tokens/time belong to configured working folders and are **unlinked to PRs**, not billing or pure compute. Use the repository filter to separate delivery evidence from governance-workspace usage.", 0, 4)
+    text("Engineering governance · local pilot", "**Observed evidence and visible gaps.** All applicable policy remains mandatory; **0 requirements are claimed enforced**. Mandatory startup and merge boundaries are not established. ¹ Unevaluated planning is Unknown, not a missing-evidence finding or retrospective violation. ² New token/time attribution requires registered Git identity and remains **unlinked to PRs**. Scope-migration errors preserve historical snapshots without refreshing or relabelling them. Tokens are not billing or pure compute.", 0, 4)
     table("Overview · adopted policy, changes and usage coverage", "summary", 4, 10)
-    table("Changes · planning, risk, checks and revision links", "changes", 14, 10, "Current-policy metadata gap observations, including historical changes predating adoption. A historical merge does not prove pre-merge readiness. Links open the PR and its revision/check evidence.")
+    table("Changes · planning, risk, checks and revision links", "changes", 14, 10, "Approved policy data supports path-risk observation only; action gates are not evaluated. Historical merges do not prove pre-merge readiness. Full evidence includes observation policy version and scope.")
     table("Candidate requirements · automation coverage and evidence limits", "rules", 24, 12, "Candidate catalogue is distinct from My EA’s adopted pin. New candidate rules are not adopted automatically. Guidance-only is not optional after adoption. Metadata presence and semantic/independent review are separate.")
     table("Decisions and follow-through · review, exceptions, device, release and outcome gaps", "decisions", 36, 10)
     text("Agent usage · how to read it", "**Input includes cached input; output includes reasoning. Do not add subsets again.** Totals are cumulative per retained session, not a time-window bill. Turn time includes tools/waiting; it is not pure compute or human effort. Parallel parent/child turn times overlap. Broad-directory sessions are excluded; unlinked sessions are not attributed to a PR. Reset/fork/malformed data is marked partial and excluded from the exact sum. The session may still be running. Collection polls every 5 minutes; views refresh every 30 seconds.", 46, 4)
@@ -45,6 +47,10 @@ def dashboard(api_port=8769):
     for panel in panels:
         if panel["gridPos"]["y"] >= 4:
             panel["gridPos"]["y"] += 6
+    for panel in panels:
+        if panel['gridPos']['y']>=10:panel['gridPos']['y']+=10
+    table('Repository coverage · all registered worktrees, including missing adoption','workspaces',10,10,
+        'Effective policy comes from the external approved pin, not the branch files. Local gaps remain visible. Inventory does not prove instructions were loaded or create a mandatory startup/merge boundary.')
     for x, field, title, unit, color in [
         (0, "Open changes", "Open PRs observed", "none", "blue"),
         (6, "Missing planning metadata", "Planning metadata gaps¹", "none", "orange"),
@@ -54,16 +60,16 @@ def dashboard(api_port=8769):
             "targets": [query("overview", api_port)], "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^"+field.replace("(", r"\(").replace(")", r"\)")+"$/", "values": False}, "textMode": "value", "colorMode": "value", "graphMode": "none"},
             "fieldConfig": {"defaults": {"unit": unit, "color": {"mode": "fixed", "fixedColor": color}, "noValue": "Unknown"}, "overrides": []}})
     details = []
-    table("Full session accounting · input, cache, output, reasoning and time", "sessions", 92, 12, "Expand for all source fields, including model, subsets, reported/observed/union/elapsed time and incomplete turns. Horizontal scrolling preserves the complete accounting view.", detailed=True)
+    table("Full session accounting · input, cache, output, reasoning and time", "sessions", 102, 12, "Expand for all source fields, including model, subsets, reported/observed/union/elapsed time and incomplete turns. Horizontal scrolling preserves the complete accounting view.", detailed=True)
     details.append(panels.pop())
-    table("Full change evidence · exact revisions and assurance limits", "changes", 104, 12, "Exact revision and PR evidence are clickable. Account/check metadata does not prove independent review or historic readiness.", detailed=True)
+    table("Full change evidence · exact revisions and assurance limits", "changes", 114, 12, "Exact revision and PR evidence are clickable. Account/check metadata does not prove independent review or historic readiness.", detailed=True)
     details.append(panels.pop())
     for index, panel in enumerate(details):
         panel["id"] = 101 + index
-    panels.append({"id": 100, "type": "row", "title": "Detailed evidence · expand for complete token/time fields and exact revision links", "collapsed": True, "gridPos": {"x": 0, "y": 91, "w": 24, "h": 1}, "panels": details})
+    panels.append({"id": 100, "type": "row", "title": "Detailed evidence · expand for complete token/time fields and exact revision links", "collapsed": True, "gridPos": {"x": 0, "y": 101, "w": 24, "h": 1}, "panels": details})
     return {"uid": UID, "title": "Agentic Engineering · Evidence & Usage", "schemaVersion": 41, "version": 1, "timezone": "browser", "refresh": "30s", "time": {"from": "now-30d", "to": "now"},
         "editable": False, "timepicker": {"hidden": True}, "tags": ["engineering-governance", "local-pilot"], "panels": panels,
-        "templating": {"list": [{"name": "repo", "label": "Repository", "type": "custom", "query": "all,tmlau8/my-ea,tmlau8/engineering-governance", "current": {"text": "all", "value": "all"}, "options": [{"text": v, "value": v, "selected": v == "all"} for v in ["all", "tmlau8/my-ea", "tmlau8/engineering-governance"]], "hide": 0}]}}
+        "templating": {"list": [{"name": "repo", "label": "Repository", "type": "custom", "query": ','.join(repositories), "current": {"text": "all", "value": "all"}, "options": [{"text": v, "value": v, "selected": v == "all"} for v in repositories], "hide": 0}]}}
 
 
 def provision(runtime, credentials, api_port=8769, grafana_port=3001):
@@ -78,7 +84,8 @@ def provision(runtime, credentials, api_port=8769, grafana_port=3001):
     path = provisioning / "datasources/evidence.yaml"; path.write_text(json.dumps(datasource, indent=2)); path.chmod(0o600)
     provider = {"apiVersion": 1, "providers": [{"name": "Engineering governance", "type": "file", "disableDeletion": True, "allowUiUpdates": False, "updateIntervalSeconds": 10, "options": {"path": str(runtime / "dashboards")}}]}
     path = provisioning / "dashboards/evidence.yaml"; path.write_text(json.dumps(provider, indent=2)); path.chmod(0o600)
-    path = runtime / "dashboards/engineering.json"; path.write_text(json.dumps(dashboard(api_port), indent=2)); path.chmod(0o600)
+    settings=json.loads((runtime/'settings.json').read_text()) if (runtime/'settings.json').is_file() else {}
+    path = runtime / "dashboards/engineering.json"; path.write_text(json.dumps(dashboard(api_port,settings.get('repositories')), indent=2)); path.chmod(0o600)
     config = f"""[paths]
 data = {runtime / 'grafana/data'}
 logs = {runtime / 'logs'}

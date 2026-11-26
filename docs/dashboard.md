@@ -15,8 +15,35 @@ python3.12 -B evidence/install.py
 python3 -B evidence/manage.py prepare \
   --my-ea '/Users/albert/Projects/My EA' \
   --workspace '/Users/albert/Claude/Projects/Grow in AI Governance'
+```
+
+Before starting collection, register each repository using an adoption commit,
+policy source revision and bundle digest approved outside the candidate checkout:
+
+```sh
+python3 -B tooling/repository_policy.py --register \
+  --registry .runtime/repositories.json --cache .runtime/approved-policy \
+  --workspace '/absolute/path/to/approved/clone' \
+  --repository OWNER/REPOSITORY --repository-id NUMERIC_GITHUB_REPOSITORY_ID \
+  --adoption-revision APPROVED_ADOPTION_COMMIT \
+  --policy-source-revision APPROVED_POLICY_COMMIT \
+  --manifest-sha256 APPROVED_MANIFEST_SHA256 --policy-version APPROVED_VERSION
 python3 -B evidence/manage.py start
 ```
+
+Replace the placeholders with independently selected approved values. A remote
+URL alone cannot register a clone. Explicitly register additional clones; linked
+worktrees are discovered automatically, including old branches missing policy
+files. Registration is an operator declaration in owner-writable storage, not a
+protected approval service. An explicitly draft adoption cannot be registered as
+approved. The external pins remain authoritative over candidate branch files.
+
+The initial `prepare` command retains legacy folder declarations for migration;
+they do not authorize repository attribution. Unregistered declarations produce a
+visible migration error and preserve prior usage snapshots without refreshing,
+deleting or relabelling their counters. Register each intended repository, then
+explicitly review/remove obsolete `usage_scopes` declarations in the private
+settings. Do not treat broad-parent sessions as belonging to a repository.
 
 Open [the local dashboard](http://localhost:3001/d/agentic-engineering-evidence).
 Username and generated password are in `.runtime/secrets/credentials.json`, an
@@ -47,13 +74,18 @@ Do not run a manual collection concurrently with the background collector.
 ## Views and their limits
 
 - **Overview and changes:** open PRs plus closed PRs updated in the last 30 days,
-  derived path risk, current planning declarations, check/review metadata and PR
+  derived path risk, check/review metadata and PR
   links. More than 60 selected changes or incomplete pagination fails visibly.
-  Historic changes are evaluated only as current-policy gap observations;
-  neither a merge nor a passing check proves earlier authorisation/readiness.
-- **38 requirements:** shared automation coverage, observed subsets and explicit
+  Risk observations use approved gate data and its approved project adapter,
+  never the development branch's policy. Published 1.0 and candidate 1.1 data
+  formats are supported for observation only; action gates are not evaluated.
+  Planning is unknown where unevaluated. Historical authorisation is not inferred.
+- **Repository coverage:** discovered worktrees, approved baseline, missing or
+  diverged local installation, inventory freshness and explicit startup/merge
+  enforcement gaps. Inventory does not establish instruction loading.
+- **Candidate requirements:** shared automation coverage, observed subsets and explicit
   semantic gaps. All applicable rules remain mandatory. Zero controls are
-  claimed natively enforced; My EA's current private plan lacks native protection.
+  claimed natively enforced. Native protection is not established by collection.
 - **Decisions:** account-level review/merge observations; independent review,
   exceptions, device, release and outcome evidence remain unknown/uncollected
   unless a future adapter supplies inspectable evidence.
@@ -73,7 +105,10 @@ does not establish a PR association. Earlier My EA sessions started in a broad
 parent directory are excluded rather than assigned speculatively. No PR-level
 cost or complete engineer/agent effort measurement is claimed.
 
-Only explicit local folder scopes are imported. Prompt/message/tool text,
+New repository attribution requires the registered Git root and common-directory
+identity to match. Nested foreign repositories are excluded. This observes current
+identity, not historical ownership of a folder or proof that policy was followed.
+Prompt/message/tool text,
 source code, PR titles/bodies and credentials are not evidence fields. Retention
 is 30 days of local observations; session counters may include older cumulative
 usage. Scans have file/byte/event caps and fail visibly if incomplete. Vendor

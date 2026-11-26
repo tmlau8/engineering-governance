@@ -46,6 +46,13 @@ def meta(cwd="/repo", session=ID):
     return {"id": session, "cwd": cwd, "timestamp": at(), "source": "vscode", "cli_version": "0.164.0"}
 
 
+def git_scope(path):
+    """Real Git identity for attribution tests; approval is tested separately."""
+    path=Path(path).resolve()
+    subprocess.check_call(['/usr/bin/git','init','-q',str(path)])
+    return {'cwd':str(path),'repository':'tmlau8/my-ea','common_dir':str(path/'.git'),'workspace_id':'fixture'}
+
+
 class UsageTests(unittest.TestCase):
     def test_fractional_timestamp_order_and_duration(self):
         a, b = token(100), token(150)
@@ -66,7 +73,7 @@ class UsageTests(unittest.TestCase):
             m = meta(); m["source"] = source
             self.assertIsNone(normalise([token(100)], m, "tmlau8/my-ea")["parent_session"])
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp); scopes = [{"cwd": tmp, "repository": "tmlau8/my-ea"}]
+            root = Path(tmp).resolve(); scopes = [git_scope(root)]
             records = [{"type": "session_meta", "payload": meta(tmp)}, token(100), token(150, 2)]
             (root / "one.jsonl").write_text("\n".join(json.dumps(r) for r in records))
             for limit in ["MAX_FILES", "MAX_SCAN_BYTES", "MAX_EVENTS", "MAX_FILE"]:
@@ -121,12 +128,15 @@ class UsageTests(unittest.TestCase):
         scopes = [{"cwd": "/projects/my-ea", "repository": "tmlau8/my-ea"}]
         self.assertIsNone(repository("/projects", scopes))
         self.assertIsNone(repository("/projects/other", scopes))
-        self.assertEqual(repository("/projects/my-ea/child", scopes), "tmlau8/my-ea")
+        self.assertIsNone(repository("/projects/my-ea/child", scopes))
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve(); scope=git_scope(root); child=root/'child';child.mkdir()
+            self.assertEqual(repository(str(child),[scope]),'tmlau8/my-ea')
 
     def test_fragment_import_sentinel_exclusion_and_shared_fork_prefix(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); project = root / "repo"; project.mkdir()
-            scopes = [{"cwd": str(project), "repository": "tmlau8/my-ea"}]
+            scopes = [git_scope(project)]
             first = {"type": "session_meta", "payload": {**meta(str(project)), "instructions": "PRIVATE_SENTINEL"}}
             records = [first, token(100), token(150, 2), event("task_complete", "turn", 3, duration_ms=3000)]
             raw = "\n".join(json.dumps(r) for r in records)
@@ -202,6 +212,21 @@ class FakeAPI:
 
 class GithubEvidenceTests(unittest.TestCase):
     def setUp(self): self.policy = load_policy(project_path=ROOT / "adapters/my-ea.json")
+
+    def test_unregistered_repository_is_not_assessed_with_another_adapter(self):
+        result=observe(FakeAPI(),'tmlau8/engineering-governance',1,None)
+        self.assertEqual(result['metadata_gate'],'not_evaluated_no_approved_adapter')
+        self.assertEqual(result['risk'],'not_evaluated_no_approved_adapter')
+
+    def test_unknown_planning_is_not_reported_as_missing_or_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store=Store(Path(tmp)/'data/evidence.sqlite')
+            result=observe(FakeAPI(),'tmlau8/engineering-governance',1,None)
+            store.snapshot('github:tmlau8/engineering-governance',{'pr':result})
+            summary=overview(store,'all')[0]
+            self.assertIsNone(summary['Missing planning metadata'])
+            self.assertEqual(summary['Planning metadata not evaluated'],1)
+            store.close()
 
     def test_new_detector_result_and_legacy_result_are_not_confused(self):
         from test_gate import change
@@ -315,6 +340,27 @@ class RuntimeTests(unittest.TestCase):
             finally:
                 for child in children:
                     if child.poll() is None: child.kill(); child.wait()
+
+    def test_cleanup_accepts_exited_child_but_refuses_unowned_live_process(self):
+        import manage,time
+        child=subprocess.Popen([sys.executable,'-c','pass',str(manage.ROOT)],start_new_session=True)
+        try:
+            deadline=time.monotonic()+5
+            while True:
+                state=subprocess.run(['ps','-p',str(child.pid),'-o','stat='],capture_output=True,text=True).stdout.strip()
+                if state.startswith('Z'):break
+                if time.monotonic()>deadline:self.fail('Fixture did not exit before cleanup probe')
+                time.sleep(.02)
+            manage.stop_children({'collector':child.pid})
+        finally:child.wait(timeout=5)
+        # Resolve the interpreter outside this repo: a .venv path otherwise
+        # carries this project's ownership marker in the command itself.
+        live=subprocess.Popen([str(Path(sys.executable).resolve()),'-c','import time;time.sleep(30)'],start_new_session=True)
+        try:
+            with self.assertRaisesRegex(ValueError,'PID_OWNERSHIP_UNCONFIRMED'):
+                manage.stop_children({'collector':live.pid})
+            self.assertIsNone(live.poll())
+        finally:live.kill();live.wait(timeout=5)
 
     def test_journal_failure_rolls_back_in_memory_child(self):
         import manage

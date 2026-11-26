@@ -28,6 +28,8 @@ def matches(path, pattern):
 
 
 def evaluate(policy, change, paths, stage, facts=None):
+    if policy.get("observation_only"):
+        raise ValueError("Observation policy cannot clear an action gate")
     facts = facts or {}
     errors, detections = [], []
     acceptance = {"records": [], "physical_human_verified": False, "independent_authority_verified": False,

@@ -11,6 +11,24 @@ def load_policy(policy_path=None, project_path=None):
         raise ValueError("Unknown/missing review requirement contract")
     from review_records import load_requirements
     load_requirements()
+    return compose(baseline, project_path)
+
+
+def load_observation_policy(policy_path, project_path):
+    """Read approved data only; never load candidate review contracts or code.
+
+    Compatibility permits risk observations, not execution of an older evaluator
+    or certification using the semantics of a newer one.
+    """
+    baseline = json.loads(Path(policy_path).read_text())
+    if baseline.get("version") not in ("1.0.0-rc.1", "1.1.0-rc.1"):
+        raise ValueError("Unsupported approved observation policy")
+    policy = compose(baseline, project_path)
+    policy["observation_only"] = True
+    return policy
+
+
+def compose(baseline, project_path):
     if project_path is None:
         raise ValueError("An explicit trusted project adapter is required")
     project = json.loads(Path(project_path).read_text())

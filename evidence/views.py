@@ -23,6 +23,9 @@ def changes(store, repo):
             "Checks": f"{sum(c['conclusion'] == 'success' for c in checks)} success / {sum(c['conclusion'] == 'pending' for c in checks)} pending / {sum(c['conclusion'] not in ('success', 'pending', 'neutral', 'skipped') for c in checks)} failed",
             "Independent review": r["independent_review"], "Policy at original decision": r["policy_at_change"],
             "Revision": r["head_sha"][:12], "PR evidence": r["url"], "Exact revision": r["revision_url"], "Updated": r["updated_at"]})
+        result[-1]['Detector adapter scope']=r.get('detector_adapter_repository','unknown')
+        result[-1]['Observation policy']=r.get('evaluated_policy_version','unknown')
+        result[-1]['Evaluation scope']=r.get('policy_evaluation_scope','unknown')
     return result
 
 
@@ -87,13 +90,41 @@ def health(store, repo):
     result = []
     at = now()
     for r in store.health():
-        if repo != "all" and ":" in r["source"] and r["source"].split(":", 1)[1] not in (repo, "codex"):
+        if repo != "all" and ":" in r["source"] and r["source"].split(":", 1)[1] not in (repo, "codex",'registry','scope-migration'):
             continue
         age = seconds(r["succeeded_at"], at)
+        freshness="never succeeded" if age is None else "stale" if age > 900 else "fresh snapshot"
+        if r['status']=='error' and age is not None:
+            freshness=('stale' if age>900 else 'recent')+' last-good; latest attempt failed'
         result.append({"Source": r["source"], "Status": r["status"], "Last attempt": r["attempted_at"], "Last success": r["succeeded_at"],
-            "Age seconds": age, "Freshness": "never succeeded" if age is None else "stale" if age > 900 else "fresh snapshot",
+            "Age seconds": age, "Freshness": freshness,
             "Error code": r["error_code"] or "none", "Rows": r["row_count"]})
     return result or [{"Source": "collector", "Status": "not_collected", "Freshness": "unknown", "Error code": "NO_SUCCESSFUL_COLLECTION", "Rows": None}]
+
+
+def workspaces(store,repo):
+    source_health={r['Source']:r for r in health(store,repo)}
+    registry_health=source_health.get('workspace:registry',{})
+    result=[]
+    for record in store.records('workspace:'):
+        r=record['data']
+        if repo!='all' and r['repository']!=repo:continue
+        h=source_health.get(record['source'],{})
+        failure=h if h.get('Status')=='error' else registry_health if registry_health.get('Status')=='error' else None
+        issues=list(r['issues'])
+        if failure:issues.append('Latest inventory rejected: '+failure.get('Error code','unknown'))
+        result.append({'Repository':r['repository'],'Workspace':r['workspace'],'Branch':r['branch'],
+            'Effective approved policy':'unknown_latest_inventory_failed' if failure else r['effective_policy_version'],
+            'Last-known policy':r['effective_policy_version'],
+            'Local files':'unknown_latest_inventory_failed' if failure else r['local_status'],
+            'Last-known local files':r['local_status'],
+            'Issues':', '.join(issues) or 'No local file mismatch observed',
+            'Instructions actually loaded':r['instruction_loading'],'Mandatory startup boundary':r['startup_enforcement'],
+            'Merge boundary':r['merge_enforcement'],'Registry custody':r['registry_custody'],
+            'Inventory status':'error' if failure else h.get('Status','unknown'),
+            'Freshness':failure.get('Freshness','last-good; latest attempt failed') if failure else h.get('Freshness','unknown'),
+            'Last observed':record['last_seen'],'Workspace ID':r['workspace_id'],'Revision':r['head_sha']})
+    return result
 
 
 def overview(store, repo):
@@ -101,16 +132,25 @@ def overview(store, repo):
     usage_ = rows(store, "usage:", repo)
     adoption = rows(store, "adoption:", repo)
     protection = rows(store, "protection:", repo)
+    inventory=rows(store,'workspace:',repo)
+    registry_error=any(r['Source']=='workspace:registry' and r['Status']=='error' for r in health(store,repo))
+    inventory_health=[r for r in health(store,repo) if r['Source'].startswith('workspace:') and r['Source']!='workspace:registry']
+    inventory_status='error' if registry_error else 'not_registered_or_not_collected' if not inventory_health else 'error' if any(r['Status']=='error' for r in inventory_health) else 'stale' if any(r['Freshness']=='stale' for r in inventory_health) else 'inventory_observed_not_launch_enforcement'
     exact = [r for r in usage_ if r["included_in_exact_rollup"]]
     reported_times = [r["reported_turn_seconds"] for r in usage_ if r["reported_turn_seconds"] is not None]
     github_observed = any(r["source"].startswith("github:") and r["succeeded_at"] and (repo == "all" or r["source"] == "github:" + repo) for r in store.health())
+    planning_unknown = sum(r['metadata_gate'].startswith('not_evaluated') for r in changes_)
     return [{"Changes inspected": len(changes_) if github_observed else None, "Open changes": sum(r["state"] == "open" for r in changes_) if github_observed else None,
-        "Missing planning metadata": sum(r["metadata_gate"] != "metadata_conforming" for r in changes_) if github_observed else None,
+        "Missing planning metadata": sum(r["metadata_gate"] != "metadata_conforming" for r in changes_) if github_observed and not planning_unknown else None,
+        "Planning metadata not evaluated": planning_unknown if github_observed else None,
         "Candidate catalogue version": json.loads((ROOT / "policy/gates.yaml").read_text())["version"],
         "Policy version": adoption[0]["policy_version"] if adoption else "not observed for selected repository",
         "Policy commit": adoption[0]["policy_commit"] if adoption else None,
         "Native merge boundary": protection[0]["status"] if protection else "not observed",
         "Enforced requirements": 0, "Requirements in catalogue": len(json.loads((ROOT / "policy/requirements.json").read_text())["rules"]),
+        'Registered workspaces discovered':len(inventory) if inventory_health else None,
+        'Workspaces with local policy gaps':sum(r['local_status']=='attention_required' for r in inventory) if inventory_health else None,
+        'Workspace inventory status':inventory_status,'Mandatory startup enforcement':'not_installed',
         "Usage sessions": len(usage_), "Reported token sum (eligible sessions)": sum(r["total_tokens"] for r in exact) if exact else None,
         "Sessions with reported time": len(reported_times),
         "Sessions excluded from exact sum": len(usage_) - len(exact), "PR-linked usage sessions": 0,
@@ -120,12 +160,12 @@ def overview(store, repo):
 
 def summary(store, repo):
     value = overview(store, repo)[0]
-    fields = ["Candidate catalogue version", "Policy version", "Policy commit", "Native merge boundary", "Enforced requirements", "Changes inspected", "Usage sessions", "Sessions excluded from exact sum", "Sessions with reported time", "PR-linked usage sessions", "Cost"]
+    fields = ["Candidate catalogue version", "Policy version", "Policy commit",'Registered workspaces discovered','Workspaces with local policy gaps','Workspace inventory status','Mandatory startup enforcement', "Native merge boundary", "Enforced requirements", "Changes inspected", "Usage sessions", "Sessions excluded from exact sum", "Sessions with reported time", "PR-linked usage sessions", "Cost"]
     return [{"Measure": key, "Observation": str(value[key]) if value[key] is not None else "Unknown / not collected"} for key in fields]
 
 
 def dispatch(store, view, repo):
-    handlers = {"overview": overview, "summary": summary, "changes": changes, "rules": rule_coverage, "sessions": sessions, "decisions": decisions, "health": health}
+    handlers = {"overview": overview, "summary": summary,'workspaces':workspaces, "changes": changes, "rules": rule_coverage, "sessions": sessions, "decisions": decisions, "health": health}
     if view == "history":
         return store.history()
     if view == "attempts":

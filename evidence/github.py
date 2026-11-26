@@ -75,11 +75,11 @@ def observe(api, repo, number, policy):
     declaration = governance(pr.get("body"))
     # Only the existing bounded detector reads declaration free text transiently.
     from check_gate import evaluate, matches
-    triggers = sorted({r["id"] for r in policy["triggers"] if any(matches(path, pattern) for path in paths for pattern in r["paths"])})
+    triggers = sorted({r["id"] for r in policy["triggers"] if any(matches(path, pattern) for path in paths for pattern in r["paths"])}) if policy else []
     declared = declaration or {}
     profile = declared.get("profile") if declared.get("profile") in ("fix", "enhancement", "feature") else "unknown"
     more = declared.get("additional_triggers", [])
-    if isinstance(more, list):
+    if policy and isinstance(more, list):
         triggers = sorted(set(triggers) | {x for x in more if isinstance(x, str) and x in {r["id"] for r in policy["triggers"]}})
     current_reviews = {}
     for r in sorted(reviews, key=lambda x: x.get("id", 0)):
@@ -101,9 +101,11 @@ def observe(api, repo, number, policy):
         conclusion = c.get("conclusion") if c.get("conclusion") in ("success", "failure", "neutral", "cancelled", "skipped", "timed_out", "action_required", "startup_failure", "stale") else "pending"
         summaries.append({"name": name, "producer": producer, "conclusion": conclusion,
             "url": github_url(repo, f"/pull/{number}/checks"), "provenance": "github_check_observed_not_protected_producer"})
-    metadata_gate = "missing_metadata"
+    metadata_gate = "missing_metadata" if policy else 'not_evaluated_no_approved_adapter'
+    if policy and policy.get('observation_only'):
+        metadata_gate = 'not_evaluated_observation_only'
     errors = []
-    if declaration is not None:
+    if policy and not policy.get('observation_only') and declaration is not None:
         try:
             preflight = evaluate(policy, declaration, paths, "before_delegation")
             metadata_gate = "metadata_conforming" if preflight["result"] == "metadata_conforming" else "metadata_incomplete"
@@ -119,7 +121,7 @@ def observe(api, repo, number, policy):
         "draft": bool(pr.get("draft")), "head_sha": sha, "base_sha": base,
         "created_at": timestamp(pr.get("created_at")), "updated_at": timestamp(pr.get("updated_at")), "merged_at": timestamp(pr.get("merged_at")),
         "url": github_url(repo, f"/pull/{number}"), "revision_url": github_url(repo, "/commit/" + sha),
-        "profile": profile, "risk": "high" if triggers else "low_from_paths_only", "triggers": triggers,
+        "profile": profile, "risk": ("high" if triggers else "low_from_paths_only") if policy else 'not_evaluated_no_approved_adapter', "triggers": triggers,
         "metadata_gate": metadata_gate, "metadata_errors": errors, "checks": summaries,
         "reviews": list(current_reviews.values()), "current_approvals": sum(r["state"] == "APPROVED" and r["commit"] == sha for r in current_reviews.values()),
         "merge_actor": identifier((pr.get("merged_by") or {}).get("login")) if pr.get("merged_at") else None,
@@ -127,7 +129,11 @@ def observe(api, repo, number, policy):
         "independent_review": "not_established_by_metadata", "policy_at_change": "not_established",
         "release_evidence": "not_collected", "outcome_evidence": "not_collected", "device_evidence": "not_collected",
         "exception_state": "declared_unverified" if declared.get("handling") == "exception" else "not_recorded",
-        "evaluation_basis": "current_policy_metadata_gap_observation_not_historical_authorisation",
+        "evaluation_basis": 'approved_policy_path_risk_observation_not_historical_authorisation' if policy and policy.get('observation_only') else "current_policy_metadata_gap_observation_not_historical_authorisation",
+        "detector_adapter_repository": policy['pilot_repository'] if policy else 'not_configured',
+        "evaluated_policy_version": policy['version'] if policy else None,
+        "observation_policy_source_revision": policy.get('approved_source_revision') if policy else None,
+        "policy_evaluation_scope": 'approved_data_path_risk_only' if policy and policy.get('observation_only') else 'candidate_metadata_detector' if policy else 'not_evaluated',
     }
 
 

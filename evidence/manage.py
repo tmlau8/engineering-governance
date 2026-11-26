@@ -57,7 +57,7 @@ def prepare(my_ea, workspace):
         write_private(credentials_file, {"grafana_user": "albert", "grafana_password": secrets.token_urlsafe(24), "api_token": secrets.token_urlsafe(40), "grafana_secret_key": secrets.token_urlsafe(40)})
     credentials = json.loads(credentials_file.read_text())
     settings = {"repositories": ["tmlau8/my-ea", "tmlau8/engineering-governance"], "api_port": 8769, "grafana_port": 3001,
-        "project_adapter": str(Path(my_ea).resolve() / ".governance/project.json"),
+        'repository_registry':str(RUNTIME/'repositories.json'),
         "sessions_root": str(Path.home() / ".codex/sessions"),
         "usage_scopes": [{"cwd": str(Path(my_ea).resolve()), "repository": "tmlau8/my-ea"}, {"cwd": str(Path(workspace).resolve()), "repository": "tmlau8/engineering-governance"}]}
     write_private(RUNTIME / "settings.json", settings)
@@ -74,8 +74,13 @@ def stop_children(children):
     for label, pid in children.items():
         if type(pid) is not int:
             raise ValueError("INVALID_OWNED_PID")
-        command = subprocess.run(["ps", "-ww", "-p", str(pid), "-o", "command="], capture_output=True, text=True).stdout
-        if not command:
+        snapshot = subprocess.run(["ps", "-ww", "-p", str(pid), "-o", "stat=", "-o", "command="], capture_output=True, text=True).stdout.strip()
+        if not snapshot:
+            continue
+        state, _, command = snapshot.partition(' ')
+        # Exited/unreaped children have lost their command path. Do not mistake
+        # them for an unowned live process or try to signal an unrelated PID.
+        if state.startswith('Z'):
             continue
         if str(ROOT) not in command or label not in ("api", "grafana", "collector"):
             raise ValueError("PID_OWNERSHIP_UNCONFIRMED")
@@ -148,7 +153,7 @@ def purge(full=False):
         raise ValueError("RUNTIME_OWNERSHIP_UNCONFIRMED")
     stop()
     time.sleep(1)
-    targets = ["data", "logs", "grafana", "provisioning", "dashboards", "secrets", "settings.json", "grafana.ini", "processes.json", ".owned-runtime.json", "software/grafana-13.3.0/data"]
+    targets = ["data", "logs", "grafana", "provisioning", "dashboards", "secrets", "settings.json", "grafana.ini", "processes.json", ".owned-runtime.json", "software/grafana-13.3.0/data",'repositories.json','approved-policy']
     if full:
         targets.append("software")
     for name in targets:

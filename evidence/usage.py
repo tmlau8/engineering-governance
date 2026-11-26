@@ -48,6 +48,9 @@ def repository(cwd, scopes):
     # Longest scope first; broad parent directories do not match child scopes.
     for scope in sorted(scopes, key=lambda x: len(x["cwd"]), reverse=True):
         if value.is_relative_to(Path(scope["cwd"]).resolve()):
+            if not scope.get('common_dir') or not scope.get('workspace_id'):return None
+            from repository_policy import scope_for
+            if scope_for(value,[scope]) is None:return None
             return scope["repository"]
     return None
 
@@ -194,11 +197,14 @@ def collect(root, scopes, days=30):
         repo = repository(meta.get("cwd"), scopes)
         if repo is None:
             continue
+        selected_scope=next((s for s in sorted(scopes,key=lambda s:len(s['cwd']),reverse=True) if repo==s['repository'] and Path(meta['cwd']).resolve().is_relative_to(Path(s['cwd']).resolve())),{})
         source = meta.get("source")
         subagent, spawn = agent_source(source)
         selected_meta = {k: meta.get(k) for k in ("id", "timestamp", "cli_version", "forked_from_id")}
         selected_meta["source"] = {"subagent": {"other": "guardian" if subagent.get("other") == "guardian" else None, "thread_spawn": {k: spawn.get(k) for k in ("parent_thread_id", "agent_path", "agent_role")}}}
-        item = grouped.setdefault(meta["id"], {"meta": selected_meta, "repo": repo, "records": [], "invalid": 0})
+        item = grouped.setdefault(meta["id"], {"meta": selected_meta, "repo": repo, "records": [], "invalid": 0,'scope':selected_scope})
+        if item['repo']!=repo or item['scope'].get('workspace_id')!=selected_scope.get('workspace_id'):
+            raise ValueError('USAGE_SESSION_IDENTITY_CONFLICT')
         for r in iterator:
             selected_events += 1
             if selected_events > MAX_EVENTS:
@@ -226,6 +232,9 @@ def collect(root, scopes, days=30):
     shared = set().union(*(ids for ids in signals.values() if len(ids) > 1)) if signals else set()
     for session, item in grouped.items():
         value = normalise(item["records"], item["meta"], item["repo"], item["invalid"])
+        if item['scope'].get('common_dir'):
+            value['association']='registered_worktree_identity_observed_at_collection_not_historical_ownership'
+            value['workspace_id']=item['scope']['workspace_id']
         value["shared_prefix_ambiguous"] = session in shared
         if session in shared:
             value["included_in_exact_rollup"] = False
