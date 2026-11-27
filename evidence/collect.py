@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tooling"))
 from load_policy import load_observation_policy
 from repository_policy import registry, inspect, ResolutionError
+from guarded_task import observations as execution_observations
 
 
 def workspace_context(runtime, config, store):
@@ -54,6 +55,14 @@ def run_once(runtime):
     runtime = Path(runtime)
     config = json.loads((runtime / "settings.json").read_text())
     store = Store(runtime / "data/evidence.sqlite")
+    # Guard records are independent of adoption/discovery availability.
+    try:
+        if (runtime/'guard/permits.sqlite').exists():
+            records=execution_observations(runtime/'guard')
+            store.snapshot('execution:local',{r['id']:r for r in records})
+        elif store.records('execution:'):raise ValueError('EXECUTION_LEDGER_UNAVAILABLE')
+    except (ValueError,OSError,KeyError,TypeError,sqlite3.Error):
+        store.failure('execution:local','EXECUTION_LEDGER_UNAVAILABLE')
     # Activity labels are declared task metadata, independent of policy readiness.
     try:
         if store.records('activity:') and not (runtime/'data/activity.sqlite').exists():raise ValueError('ACTIVITY_LEDGER_UNAVAILABLE')

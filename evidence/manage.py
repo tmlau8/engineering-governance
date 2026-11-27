@@ -225,9 +225,15 @@ def purge(full=False):
     marker = RUNTIME / ".owned-runtime.json"
     if RUNTIME.is_symlink() or not marker.exists() or json.loads(marker.read_text()).get("project") != str(ROOT):
         raise ValueError("RUNTIME_OWNERSHIP_UNCONFIRMED")
+    guard_state=RUNTIME/'guard/permits.sqlite'
+    if guard_state.exists():
+        import sqlite3
+        if guard_state.is_symlink() or guard_state.parent.is_symlink():raise ValueError('UNSAFE_GUARD_STATE')
+        with sqlite3.connect(guard_state.resolve().as_uri()+'?mode=ro',uri=True) as guard_db:
+            if guard_db.execute("SELECT 1 FROM tasks WHERE state='claimed' LIMIT 1").fetchone():raise ValueError('GUARD_TASK_MAY_BE_ACTIVE')
     stop()
     time.sleep(1)
-    targets = ["data", "logs", "grafana", "provisioning", "dashboards", "secrets", "settings.json", "grafana.ini", "processes.json", ".owned-runtime.json", "software/grafana-13.3.0/data",'repositories.json','approved-policy']
+    targets = ["data", "logs", "grafana", "provisioning", "dashboards", "secrets", "settings.json", "grafana.ini", "processes.json", ".owned-runtime.json", "software/grafana-13.3.0/data",'repositories.json','approved-policy','guard']
     if full:
         targets.append("software")
     for name in targets:

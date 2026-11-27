@@ -1,87 +1,96 @@
 # GUARD-005 verification — 27 November 2026
 
-**Senior Concierge implementation is not cleared.** This change supplies a
-repeatable native command-boundary verifier, not a production task launcher.
-Neither a policy reference nor successful synthetic tests establish that an
-existing Desktop chat is governed.
+The mandatory controller is implemented for the explicitly launched Codex CLI
+route. **Senior Concierge activation is still pending its owner adoption decision
+and a clean reviewed task.** Existing Desktop chats and GitHub owner actions are
+outside this boundary. A completed client is not an accepted feature or release.
 
-## Completed evidence
+## Implemented
 
-`tooling/guard_runtime.py` passed all 28 checks against Codex CLI
-`0.171.0-alpha.13.2`, executable SHA256
+`tooling/guarded_task.py` binds canonical root/common-dir, clean feature HEAD,
+authenticated Git trees/index, working bytes/executable modes, the explicit owner
+pin for the default branch, read-only specification, trusted external adapter,
+raw review/receipt byte hashes, controller/policy/telemetry code, model/provider,
+exact writable files, launch expiry and wall timeout. Default branches and dirty
+source are rejected. It never stashes, commits or cleans project work.
+
+Only metadata-conforming required reviews can reach preparation; the operator must
+inspect the actual records and explicitly approve the exact packet digest.
+Physical human identity and reviewer origin are not authenticated. A claim is
+atomic and single-use, including rejected/failed launches. Expiry is checked after
+source validation immediately before spawn. Rejections and client outcomes are
+retained privately and projected into the read-only execution dashboard view.
+
+Worker permission is root-deny/minimal-runtime plus reviewed tracked-file reads
+and exact planned file writes. Ignored data, credential stores and Git metadata stay denied. Reviewed project authority/instruction files are read-only; they cannot widen runtime permissions. Planned new-file parents are created by the controller; the worker gets
+no parent-directory write grant. Startup ignores user/candidate client config,
+plugins/hooks/browser/image integrations and MCP configuration; commands have no
+network or inherited GitHub/SSH/proxy credentials. Owner controller state and
+Git metadata are outside worker authority. Mandatory execution applies to this
+route only; source/owner actions remain trusted, point-in-time assumptions.
+
+## Runtime evidence
+
+Installed Codex CLI: `0.171.0-alpha.13.2`; executable SHA256:
 `e1c3d034b7fd295d160d6ab412357f9c54241c8ed7a2a861f4730b8a4dd88ddb`.
-Run it explicitly on the supported macOS/Xcode installation:
 
-```sh
-.venv/bin/python -B tooling/guard_runtime.py
-```
+- Native verifier: **32 checks passed**, including runtime positive controls,
+  read/write scopes, exact new-file creation, denied unplanned siblings, symlinks,
+  existing/dynamic hardlinks, local/external networking, foreign-process signals
+  and detached-child writes. These are synthetic native command tests.
+- Live Codex parent and actual child: allowed shell/patch writes succeeded;
+  protected reads/shell writes were denied and protected patch writes explicitly
+  rejected. Final permitted content was CHILD_PATCH; protected content unchanged.
+  Synthetic canary absent from captured host output. Both recorded Never approval,
+  network disabled and the same exact-file authority. Independent Security inspected
+  the primary records, excluding inherited parent records from child conclusions.
+- `agents.max_depth=0` did not disable delegation; no such guarantee is made.
+- Live models did not attempt explicit require_escalated. Their refusal was not
+  counted as engine evidence. `verify_guard_escalation.py` instead uses an isolated
+  client home, synthetic key and local fixture provider to force the native
+  exec_command request. It requires the exact Never-policy rejection for the exact
+  call, two requests, zero transport errors and unchanged protected content.
+  **Passed**, with no real model request or owner credential read. This is native
+  handler evidence, not a live CodeMode escalation attempt.
 
-It uses disposable synthetic files and no model requests. Positive read, write,
-sandboxed Python/import/subprocess/file-recreation and live loopback controls
-succeeded. Read-only writes, adjacent/foreign writes, outside and nested-secret
-reads, symlink writes, dynamic hardlink creation, local/external socket connects,
-same-user foreign-process signals and detached-child writes were denied. Existing
-hardlinks are rejected before use. Exact socket-operation PermissionError output
-is required, independent of external connectivity. The final effect of operations
-is checked outside the sandbox. The report always says implementation_authorized
-is false. This is a platform-specific observation, not a portable certificate.
+Whole fresh CLI root sessions are predeclared against a unique non-Git driver cwd.
+Only source=exec roots created/completed within markers can contribute observed
+cumulative usage. Guardian/unknown/subagent sources cannot become root evidence.
+Child usage requires separate instrumentation and is explicitly excluded in current
+activity/task coverage. No token request is made for instrumentation. Missing,
+ambiguous, incomplete or forked data stays unknown; no complete delegated-task bill
+is claimed. Existing per-review markers remain separate.
 
-Independent Quality review identified a false-pass risk if sandboxed Python could
-not initialize. The additional in-profile runtime positive control now proves
-imports, subprocess execution, removal/recreation and verified writes. It passed
-on the final run. The scanner is a point-in-time check, not a concurrent-owner lock.
+## Regression and review
 
-Three bounded actual-client experiments used temporary files. Shell and patch
-changed the allowed file; protected content stayed unchanged and synthetic secret
-content did not appear in captured host output. Host tool reflection found image
-and image-preview tools still present in the first configuration. Supported
-image_generation/view_image disabling removed them in the final experiment.
-MCP resource/template results were empty in that experiment.
+Full 169-test suites passed on Python 3.9 and 3.12; exact deterministic bundle
+verification passed. The portable bundle includes the controller's three telemetry
+dependencies, with an isolated bundled-controller digest/import check. Linux CI
+checks source regressions, not macOS native runtime behavior. Final lifecycle,
+dashboard and publication results are confirmed separately below.
 
-The actual client still allowed child-agent creation with agents.max_depth=0.
-The child's recorded permission profile matched its parent's restricted filesystem,
-network and never-approve settings. That metadata is not a behavioral escape test.
-Do not claim delegation is disabled, or count this as a cleared frontend boundary.
-No real credential files were probed. No Senior source or adoption was changed.
+Independent Security and Quality found and corrected omitted policy/adapter
+bindings, late expiry, executable-mode drift, missing canonical-root containment,
+misleading claim state, unbounded tree traversal, overly broad escalation matching
+and guardian/root telemetry confusion. Their final clearance is limited to the
+reviewed scope and evidence; it is not project approval or release authority.
 
-## Regression verification
+## Remaining owner/project decisions
 
-All 146 tests passed on Python 3.9 and Python 3.12 with the hash-locked
-validator dependencies. The sandbox-only initial run could not bind loopback
-listeners or inspect processes; the authorised runtime runs passed. Bundle
-construction and exact-byte verification also passed. Linux CI runs the source
-regressions; it does not run or certify the macOS native verifier.
+1. Review and merge the separately prepared governance/Senior adoption changes;
+   no merge is authorised by this record.
+2. Preserve/reconcile the existing Senior architecture edits into the intended
+   reviewed feature snapshot. The controller refuses dirty work rather than
+   altering it automatically.
+3. Resolve the feature's actual phone/platform prerequisites and required
+   independent review evidence before dependent implementation. These are feature
+   requirements, not cleared by controller tests.
+4. Inspect and approve an exact real task from the owner terminal, then launch it
+   through the guarded route. No real Senior task permission was issued here.
 
-## Outstanding controls, in execution order
+Expiry limits launch, not revocation of detached access. Timeout/error cleanup
+terminates the owned process group; detached descendants retain kernel scope
+restrictions. Concurrent owner mutation and deliberate owner bypass are outside
+this pilot. GitHub merge/release remains manual on the current private-repo plan.
 
-1. Verify the entire enabled client/tool surface, including actual child behavior
-   and alternate permission/approval requests, against the fixed launch contract.
-   The native-command verifier cannot clear this requirement.
-2. Implement and independently test an owner-side controller: exact source/spec/
-   review binding, scope, expiry, atomic single-use permission, timeout and private
-   audit record. It must reject changes before launching; an optional CLI check
-   alone is insufficient. This controller has **not** been implemented here.
-3. Reconcile and explicitly approve Senior's draft adoption. Preserve its current
-   uncommitted architecture work and bind the reviewed final revision. Feature
-   profile certification is not available from the fix-only pilot evaluator.
-4. Collect the actual platform/phone feasibility and independent review evidence
-   required by the Senior feature. Code/configuration success is not that evidence.
-5. Activate only the reviewed execution route, then test denial of a missing review,
-   stale source, expired/reused grant and out-of-scope write before real coding.
-   Show those records in the dashboard; no such execution records exist today.
-
-GitHub merge/release remains an explicit human control on the current private-repo
-plan. No plan purchase, repository visibility change, global client installation,
-merge or release was performed. Existing unmanaged Desktop chats are outside this
-candidate control. Read-only feasibility investigation can proceed within its
-existing authority; dependent implementation remains blocked.
-
-## Independent contribution record
-
-Independent Quality review identified the sandboxed-Python false-pass risk and
-verified the correction against the final harness and seven focused tests. The
-reviewer inspected the account for readiness overclaims and retained its blocked
-production status. Actual native and full-matrix execution was performed by the
-builder, separately from that static review. Final Security/adversarial review is
-still pending; this is a draft checkpoint, not a cleared activation or release.
-Review declarations do not authenticate reviewer origin or separate credentials.
+Final independent Security/adversarial and Quality/principal review cleared the bounded CLI candidate and local technical capability-receipt installation. This is not permission for any real project task. Security reviewed controller digest `4ba64b96e065e36a864d1bd58a2af591e7ba831071910ff9f83bd58156c70ed6`.

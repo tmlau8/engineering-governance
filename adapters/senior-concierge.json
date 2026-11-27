@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "repository": "tmlau8/senior-concierge",
+  "human_authorities": [
+    "tmlau8"
+  ],
+  "required_checks": [
+    {
+      "name": "governance-adoption",
+      "producer": "github-actions",
+      "workflow": ".github/workflows/governance-adoption.yml",
+      "dependency_paths": [
+        "scripts/check_governance.py",
+        ".governance/**",
+        "AGENTS.md",
+        "CLAUDE.md"
+      ]
+    }
+  ],
+  "trigger_paths": {
+    "security": [
+      "**/*[Aa]uth*",
+      "**/*[Pp]rivacy*",
+      "**/*[Ss]ecurity*",
+      "**/*[Kk]eychain*",
+      "**/*.entitlements",
+      "**/*[Pp]ermission*",
+      "**/*[Tt]oken*",
+      "**/*[Cc]redential*",
+      "**/*[Ss]ession*",
+      "**/*[Ll]ogin*",
+      "**/Info.plist",
+      "**/*[Cc]onsent*"
+    ],
+    "data": [
+      "**/*[Mm]igration*",
+      "**/*[Ss]chema*",
+      "**/migrations/**"
+    ],
+    "dependency_tool_permission": [
+      "**/Package.swift",
+      "**/Package.resolved",
+      "**/package*.json",
+      "**/requirements*.txt",
+      "**/pyproject.toml",
+      ".claude/**",
+      ".codex/**",
+      ".agents/**",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "**/AGENTS.md",
+      "**/CLAUDE.md",
+      "**/.claude/**",
+      "**/.codex/**",
+      "**/.agents/**",
+      "**/*.lock",
+      "**/Podfile.lock",
+      "**/Gemfile.lock",
+      "**/yarn.lock",
+      "**/pnpm-lock.yaml",
+      "**/Cargo.lock"
+    ],
+    "infrastructure": [
+      "infra/**",
+      "deploy/**",
+      "**/Dockerfile*",
+      "**/*.tf",
+      "**/*[Dd]eploy*"
+    ],
+    "assurance": [
+      ".github/**",
+      ".governance/**",
+      "governance/**",
+      "**/gates.yaml",
+      "**/*[Tt]est*",
+      "**/*[Tt]ests/**",
+      "scripts/**",
+      "**/*[Pp]olicy*",
+      "**/*[Gg]overnance*",
+      "**/AGENTS.md",
+      "**/CLAUDE.md",
+      ".claude/**",
+      ".codex/**",
+      "docs/00-product/ways-of-working.md",
+      "docs/06-quality/**"
+    ]
+  }
+}

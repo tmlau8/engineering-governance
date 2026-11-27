@@ -91,6 +91,11 @@ def snapshot(root, binding, cutoff, window_start=None):
             _, spawn = agent_source(meta.get('source'))
             if binding.get('session'):
                 match = meta['id'] == binding['session']
+            elif binding.get('cli_cwd'):
+                match = (meta.get('source') == 'exec' and isinstance(meta.get('cwd'),str) and
+                         str(Path(meta['cwd']).resolve()) == binding['cli_cwd'] and
+                         (timestamp(meta.get('timestamp')) or '') >= binding['began_at'] and
+                         (timestamp(meta.get('timestamp')) or 'z') <= cutoff)
             else:
                 match = (spawn.get('agent_path') == binding['agent_path'] and
                          spawn.get('parent_thread_id') == binding['parent_session'] and
@@ -98,6 +103,7 @@ def snapshot(root, binding, cutoff, window_start=None):
                          (timestamp(meta.get('timestamp')) or 'z') <= cutoff)
             if not match: continue
             identity = {k: meta.get(k) for k in ('id','timestamp','forked_from_id')}
+            if binding.get('cli_cwd'):identity['cli_cwd']=binding['cli_cwd']
             identity.update(parent=spawn.get('parent_thread_id'), agent=spawn.get('agent_path'))
             if meta['id'] in identities and identities[meta['id']] != identity:
                 raise ActivityError('ACTIVITY_SESSION_IDENTITY_CONFLICT')
@@ -180,13 +186,16 @@ def snapshot(root, binding, cutoff, window_start=None):
 
 def validate(meta):
     keys = {'repository','task','pr','revision','role','phase','round','findings','review_record','session','agent_path','parent_session'}
-    if not isinstance(meta,dict) or set(meta) != keys or any(not isinstance(meta[k],str) for k in ('repository','task','role')) or len(meta['repository'])>200 or not REPO.fullmatch(meta['repository']) or not ID.fullmatch(meta['task']) or not ID.fullmatch(meta['role']): raise ActivityError('INVALID_ACTIVITY_METADATA')
+    if not isinstance(meta,dict) or set(meta) not in (keys,keys|{'cli_cwd'}) or any(not isinstance(meta[k],str) for k in ('repository','task','role')) or len(meta['repository'])>200 or not REPO.fullmatch(meta['repository']) or not ID.fullmatch(meta['task']) or not ID.fullmatch(meta['role']): raise ActivityError('INVALID_ACTIVITY_METADATA')
     if meta['phase'] not in PHASES or type(meta['round']) is not int or not 1 <= meta['round'] <= 1000: raise ActivityError('INVALID_ACTIVITY_METADATA')
     if meta['pr'] is not None and (type(meta['pr']) is not int or not 1 <= meta['pr'] <= 10**9): raise ActivityError('INVALID_ACTIVITY_METADATA')
     if meta['revision'] is not None and (not isinstance(meta['revision'],str) or not SHA.fullmatch(meta['revision'])): raise ActivityError('INVALID_ACTIVITY_METADATA')
     if meta['review_record'] is not None and (not isinstance(meta['review_record'],str) or not ID.fullmatch(meta['review_record'])): raise ActivityError('INVALID_ACTIVITY_METADATA')
     if not isinstance(meta['findings'],list) or len(meta['findings']) > 16 or any(not isinstance(f,str) or not ID.fullmatch(f) for f in meta['findings']): raise ActivityError('INVALID_ACTIVITY_METADATA')
-    if meta['session']:
+    if meta.get('cli_cwd'):
+        cwd=meta['cli_cwd']
+        if not isinstance(cwd,str) or len(cwd)>1024 or not Path(cwd).is_absolute() or str(Path(cwd).resolve())!=cwd or any(meta[k] for k in ['session','agent_path','parent_session']):raise ActivityError('INVALID_ACTIVITY_BINDING')
+    elif meta['session']:
         if not uid(meta['session']) or meta['agent_path'] or meta['parent_session']: raise ActivityError('INVALID_ACTIVITY_BINDING')
     elif not isinstance(meta['agent_path'],str) or len(meta['agent_path']) > 160 or not AGENT.fullmatch(meta['agent_path']) or not uid(meta['parent_session']): raise ActivityError('INVALID_ACTIVITY_BINDING')
 
@@ -263,7 +272,7 @@ def begin(runtime, sessions, meta, run_id=None):
             if old['id']==run_id:
                 if old['metadata']!=meta: raise ActivityError('CONFLICTING_ACTIVITY_RETRY')
                 return old
-            if old['ended_at'] is None and ((meta['session'] and old['metadata']['session']==meta['session']) or (not meta['session'] and (old['metadata']['agent_path'],old['metadata']['parent_session'])==(meta['agent_path'],meta['parent_session']))):
+            if old['ended_at'] is None and ((meta.get('cli_cwd') and old['metadata'].get('cli_cwd')==meta['cli_cwd']) or (not meta.get('cli_cwd') and not old['metadata'].get('cli_cwd') and ((meta['session'] and old['metadata']['session']==meta['session']) or (not meta['session'] and (old['metadata']['agent_path'],old['metadata']['parent_session'])==(meta['agent_path'],meta['parent_session']))))):
                 raise ActivityError('ACTIVE_ACTIVITY_OVERLAP')
         if len(records)>=MAX_RUNS: raise ActivityError('ACTIVITY_ROW_LIMIT')
         at=timestamp(now()); binding={**meta,'began_at':at}
@@ -336,7 +345,7 @@ def project(row):
             'tokens':tokens,'eligible':tokens is not None and not flags,'flags':sorted(set(flags)),
             'elapsed_seconds':seconds(row['began_at'],row['ended_at']),
             'association':'operator_declared_task_phase_not_independent_authority',
-            'instrumentation_model_calls':0}
+            'instrumentation_model_calls':0,'measurement_scope':'CLI root session only; child sessions excluded unless separately instrumented' if m.get('cli_cwd') else 'Explicitly bound individual session'}
 
 
 def collect(runtime):

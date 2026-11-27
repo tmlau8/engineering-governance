@@ -14,6 +14,10 @@ def build(destination):
     destination.mkdir(parents=True)
     for name in ["policy", "tooling", "templates"]:
         shutil.copytree(ROOT / name, destination / name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    # Optional guarded CLI telemetry dependencies; no runtime data or settings.
+    (destination/'evidence').mkdir()
+    for name in ['activity.py','usage.py','common.py']:
+        shutil.copyfile(ROOT/'evidence'/name,destination/'evidence'/name)
     files = {str(p.relative_to(destination)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(destination.rglob("*")) if p.is_file()}
     version = json.loads((ROOT / "policy/gates.yaml").read_text())["version"]
     manifest = {"schema_version": 1, "version": version, "python_minimum": "3.9", "files": files}

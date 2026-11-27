@@ -58,3 +58,12 @@ class GuardRuntimeTests(unittest.TestCase):
     def test_unsupported_platform_fails_closed(self):
         with patch.object(guard.sys, 'platform', 'linux'):
             with self.assertRaisesRegex(ValueError, 'UNVERIFIED_PLATFORM'): guard.verify('/unused')
+
+class EscalationDenialTests(unittest.TestCase):
+    def test_only_exact_expected_call_and_denial_count(self):
+        from verify_guard_escalation import exact_denial
+        expected='approval policy is Never; reject command — you cannot ask for escalated permissions if the approval policy is Never'
+        good={'type':'function_call_output','call_id':'call_fixture','output':expected}
+        self.assertTrue(exact_denial(good))
+        for change in [{'output':'unrelated approval parser failure'},{'output':'unsupported tool; reject'},{'call_id':'different'},{'type':'custom_tool_call_output'},{'output':{'text':expected}}]:
+            self.assertFalse(exact_denial(dict(good,**change)))

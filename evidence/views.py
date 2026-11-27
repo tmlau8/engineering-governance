@@ -177,7 +177,7 @@ def activities(store,repo):
             'Total tokens':u.get('total_tokens'),'Input tokens':u.get('input_tokens'),
             'Cached input (subset)':u.get('cached_input_tokens'),'Output tokens':u.get('output_tokens'),
             'Reasoning (subset)':u.get('reasoning_output_tokens'),
-            'Marker elapsed seconds':r['elapsed_seconds'],'Measurement':r['measurement_basis'],
+            'Marker elapsed seconds':r['elapsed_seconds'],'Measurement':r['measurement_basis'],'Agent scope':r.get('measurement_scope','Explicitly bound individual session'),
             'Eligible subtotal':r['eligible'],'Gaps':', '.join(r['flags']) or 'Boundary observations; semantic timing unverified',
             'Findings':', '.join(dict.fromkeys(m['findings']+r['outcome_findings'])),
             'Review record':m['review_record'],'Reviewed revision':m['revision'],
@@ -208,14 +208,24 @@ def activity_totals(store,repo,by_round=False):
             'Observed token subtotal':sum(r['tokens']['total_tokens'] for r in eligible) if eligible else None,
             'Marker seconds (sum)':sum(r['elapsed_seconds'] for r in group if r['elapsed_seconds'] is not None) if intervals else None,
             'Marker seconds (union)':interval_union(intervals) if intervals else None,
-            'Coverage':'Recorded activities only; historical/uninstrumented work unknown; separate from session totals',
+            'Coverage':('CLI root sessions only; child sessions excluded unless separately instrumented. ' if any(r['metadata'].get('cli_cwd') for r in group) else '')+'Recorded activities only; historical/uninstrumented work unknown; separate from session totals',
             'Telemetry model calls':0})
     return result
 
 
+def execution(store,repo):
+    return [{'Task':r['task'],'Repository':r['repository'],'Gate state':r['state'],
+             'Last decision':r['last_decision'],'Profile':r['profile'],'Risk':r['risk'],
+             'Reviewed revision':r['head_sha'],'Review records':', '.join(r['review_record_ids']),
+             'Review assurance':r['review_assurance'],'Identity assurance':r['authority'],
+             'Enforcement scope':r['scope'],'Merge/release':r['merge_release'],
+             'Launch expiry (Unix)':r['expires_at'],'Wall timeout seconds':r['timeout_seconds'],
+             'Task permit':r['id']} for r in rows(store,'execution:',repo)]
+
+
 def dispatch(store, view, repo):
     handlers = {"overview": overview, "summary": summary,'workspaces':workspaces, "changes": changes, "rules": rule_coverage, "sessions": sessions, "decisions": decisions, "health": health,
-        'activities':activities,'activity-tasks':activity_totals,'activity-rounds':lambda s,r:activity_totals(s,r,True)}
+        'execution':execution,'activities':activities,'activity-tasks':activity_totals,'activity-rounds':lambda s,r:activity_totals(s,r,True)}
     if view == "history":
         return store.history()
     if view == "attempts":

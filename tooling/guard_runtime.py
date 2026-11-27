@@ -148,6 +148,11 @@ def verify(executable):
         probe('foreign_read_denied', write, ['/bin/cat', foreign], 1, b'SYNTHETIC_CANARY')
         probe('nested_secret_denied', write, ['/bin/cat', secret], 1, b'SYNTHETIC_NESTED')
         probe('positive_scoped_write', write, ['/bin/sh', '-c', 'echo PERMITTED > allowed'])
+        new_file=worker/'new-planned-file';new_permissions=profile(worker,runtime_reads=[xcode]);new_permissions['filesystem'][str(new_file)]='write'
+        probe('new_exact_file_creation',new_permissions,['/bin/sh','-c','echo NEW > new-planned-file'])
+        checks['new_file_effect']=new_file.exists() and new_file.read_text().strip()=='NEW'
+        probe('unplanned_new_file_denied',new_permissions,['/bin/sh','-c','echo BAD > unplanned-file'],1)
+        checks['unplanned_file_absent']=not (worker/'unplanned-file').exists()
         checks['scoped_write_effect'] = allowed.read_text().strip() == 'PERMITTED'
         script = ('import os,socket,subprocess,sys;'
                   'p=sys.argv[1];os.unlink(p);open(p,"w").write("PYTHON_READY");'

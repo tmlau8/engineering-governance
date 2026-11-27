@@ -242,3 +242,33 @@ class ActivityTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class CLIBindingTests(unittest.TestCase):
+    setUp=ActivityTests.setUp
+    write=ActivityTests.write
+    begin=ActivityTests.begin
+    end=ActivityTests.end
+    def cli_meta(self):
+        meta=dict(self.meta,session=None,agent_path=None,parent_session=None,cli_cwd=str(self.root/'unique-driver'))
+        (self.root/'unique-driver').mkdir(exist_ok=True)
+        return meta
+    def write_cli(self,sid=SID,agent=None):
+        path=self.write([event(12,'task_started'),tokens(18,150),event(19,'task_complete')],sid=sid,agent=agent,created=11)
+        records=[json.loads(line) for line in path.read_text().splitlines()];records[0]['payload']['cwd']=str(self.root/'unique-driver')
+        if not agent:records[0]['payload']['source']='exec'
+        path.write_text('\n'.join(json.dumps(r) for r in records)+'\n')
+    def test_fresh_cli_capture_excludes_children_and_freezes(self):
+        meta=self.cli_meta();row=self.begin(meta=meta);self.write_cli();self.write_cli(PARENT,agent='/root/reviewer')
+        self.end(row);result=a.collect(self.runtime)[row['id']]
+        self.assertEqual(result['tokens']['total_tokens'],150);self.assertFalse(result['flags'])
+        self.assertNotIn('cli_cwd',result)
+    def test_ambiguous_cli_sessions_fail_closed(self):
+        row=self.begin(meta=self.cli_meta());self.write_cli();self.write_cli(PARENT)
+        with self.assertRaisesRegex(ValueError,'AMBIGUOUS'):self.end(row)
+        self.assertIsNone(a.collect(self.runtime)[row['id']]['tokens'])
+    def test_guardian_and_unknown_sources_never_establish_cli_root(self):
+        meta=self.cli_meta()
+        for source in [{'subagent':{'other':'guardian'}},{'subagent':{'thread_spawn':{'parent_thread_id':PARENT}}},'unknown','cli']:
+            self.write_cli();path=self.sessions/(SID+'.jsonl');records=[json.loads(x) for x in path.read_text().splitlines()];records[0]['payload']['source']=source;path.write_text('\n'.join(json.dumps(x) for x in records)+'\n')
+            result=a.snapshot(self.sessions,{**meta,'began_at':at(10)},at(20))
+            self.assertIsNone(result['tokens'])

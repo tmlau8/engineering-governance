@@ -14,7 +14,7 @@ The existing review-record format remains canonical. Unknown feasibility or an
 unavailable required review blocks dependent implementation.
 
 A task binds canonical repository root/common-dir, a clean feature-branch HEAD,
-specification and review-bundle byte digests, explicit writable files, approved
+specification and review-bundle byte digests, explicit writable files (including planned new files), approved
 model/provider boundary, launch expiry and wall-clock budget. Source/spec/review
 changes require a new decision. Each implementation permit is consumed atomically
 before launch, including failed launches. Expiry limits launch; it is not a promise
@@ -23,8 +23,7 @@ children retain kernel restrictions. Owner merge and release remain manual.
 
 Use supported named Codex permission profiles with root-deny, minimal runtime
 reads, read-only target and exact write exceptions. Deny Git/control/credential
-paths and all worker network access. Reject workspace symlinks, hardlinks and
-special files before a grant; a demonstrated pre-existing hardlink bypass makes
+paths and all worker network access. Reject aliases/special files in tracked source and scoped paths; ignored files receive no worker read/write grants. Reject hardlinks before a grant; a demonstrated pre-existing hardlink bypass makes
 this a load-bearing prerequisite. Do not load candidate hooks, project configs,
 MCP or plugins. Launch from a trusted non-Git driver directory with a scrubbed
 environment and closed inherited descriptors. Model transport is a trusted client

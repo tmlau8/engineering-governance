@@ -5,7 +5,8 @@ from pathlib import Path
 UID = "agentic-engineering-evidence"
 DS = {"type": "yesoreyeram-infinity-datasource", "uid": "governance-evidence"}
 COLUMNS = {
-    'activities':['Task','Phase','Round','Agent role','Model','State','Total tokens','Marker elapsed seconds','Measurement','Gaps','Findings','Activity'],
+    'execution':['Task','Gate state','Last decision','Profile','Risk','Review records','Enforcement scope','Merge/release'],
+    'activities':['Task','Phase','Round','Agent role','Model','State','Total tokens','Marker elapsed seconds','Measurement','Agent scope','Gaps','Findings','Activity'],
     'activity-tasks':['Task','Observed token subtotal','Eligible activities','Recorded activities','Excluded or open','Marker seconds (sum)','Marker seconds (union)','Coverage'],
     'activity-rounds':['Task','Phase','Round','Observed token subtotal','Eligible activities','Recorded activities','Excluded or open','Marker seconds (sum)','Marker seconds (union)'],
     'workspaces':['Workspace','Branch','Effective approved policy','Local files','Issues','Inventory status','Freshness'],
@@ -83,6 +84,8 @@ def dashboard(api_port=8769, repositories=None):
         'Complete input/cache/output/reasoning fields, frozen snapshots, boundary lags, findings, revision links and measurement basis. Role labels do not establish reviewer independence.',detailed=True)
     # The existing collapsed detail row occupies y130 with children through y155.
     panels[-1]['gridPos']['y']=168
+    table('Guarded task gates · decisions, review records and execution boundary','execution',181,12,
+        'Only tasks launched through the owner controller are in scope. Operator decisions are not authenticated human identity. Completed means client exit, not acceptance. Empty means no recorded task; no enforcement inferred.')
     return {"uid": UID, "title": "Agentic Engineering · Evidence & Usage", "schemaVersion": 41, "version": 1, "timezone": "browser", "refresh": "30s", "time": {"from": "now-30d", "to": "now"},
         "editable": False, "timepicker": {"hidden": True}, "tags": ["engineering-governance", "local-pilot"], "panels": panels,
         "templating": {"list": [{"name": "repo", "label": "Repository", "type": "custom", "query": ','.join(repositories), "current": {"text": "all", "value": "all"}, "options": [{"text": v, "value": v, "selected": v == "all"} for v in repositories], "hide": 0}]}}
