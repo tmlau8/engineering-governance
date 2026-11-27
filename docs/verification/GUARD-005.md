@@ -94,3 +94,11 @@ restrictions. Concurrent owner mutation and deliberate owner bypass are outside
 this pilot. GitHub merge/release remains manual on the current private-repo plan.
 
 Final independent Security/adversarial and Quality/principal review cleared the bounded CLI candidate and local technical capability-receipt installation. This is not permission for any real project task. Security reviewed controller digest `4ba64b96e065e36a864d1bd58a2af591e7ba831071910ff9f83bd58156c70ed6`.
+
+The adoption review caught missing Gradle/Bun lock formats after narrowing the old
+broad pattern. Additive shared mandatory patterns now cover `.lock`, `.lock.*`,
+`.lockfile`, `.lockb` and named Lockfile formats for every adapter. A dedicated
+fixture passes for both projects, including Terraform/Brew cases and ClockView/
+BlockedState negative cases. Security and Quality cleared this stricter mapping;
+controller digest is now `668081eafa66ddbc4502cb6c3cccb77e7c39f4cf2ad3b378faa6f9d737771a3d`.
+No source authority profile changed; no real task permission was issued.

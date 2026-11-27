@@ -38,7 +38,7 @@ def dashboard(api_port=8769, repositories=None):
         panels[-1]["fieldConfig"]["defaults"]["custom"]["minWidth"] = 110
         if view == "summary":
             panels[-1]["fieldConfig"]["overrides"].append({"matcher": {"id": "byName", "options": "Measure"}, "properties": [{"id": "custom.width", "value": 290}]})
-    text("Engineering governance · local pilot", "**Observed evidence and visible gaps.** All applicable policy remains mandatory; **0 requirements are claimed enforced**. Mandatory startup and merge boundaries are not established. ¹ Unevaluated planning is Unknown, not a retrospective violation. ² Session repository attribution uses registered Git identity; activity task/phase links are **explicitly declared**. Activity subtotals and cumulative session totals are separate measures. Scope errors retain last-known snapshots. Tokens are not billing or pure compute.", 0, 4)
+    text("Engineering governance · local pilot", "**Observed evidence and visible gaps.** All applicable policy remains mandatory; **0 requirements are claimed enforced**. Native Desktop startup and GitHub merge boundaries are not established. Guarded CLI task permissions use a separate explicit route shown below. ¹ Unevaluated planning is Unknown, not a retrospective violation. ² Session repository attribution uses registered Git identity; activity task/phase links are **explicitly declared**. Activity subtotals and cumulative session totals are separate measures. Scope errors retain last-known snapshots. Tokens are not billing or pure compute.", 0, 4)
     table("Overview · adopted policy, changes and usage coverage", "summary", 4, 10)
     table("Changes · planning, risk, checks and revision links", "changes", 14, 10, "Approved policy data supports path-risk observation only; action gates are not evaluated. Historical merges do not prove pre-merge readiness. Full evidence includes observation policy version and scope.")
     table("Candidate requirements · automation coverage and evidence limits", "rules", 24, 12, "Candidate catalogue is distinct from My EA’s adopted pin. New candidate rules are not adopted automatically. Guidance-only is not optional after adoption. Metadata presence and semantic/independent review are separate.")
@@ -84,7 +84,10 @@ def dashboard(api_port=8769, repositories=None):
         'Complete input/cache/output/reasoning fields, frozen snapshots, boundary lags, findings, revision links and measurement basis. Role labels do not establish reviewer independence.',detailed=True)
     # The existing collapsed detail row occupies y130 with children through y155.
     panels[-1]['gridPos']['y']=168
-    table('Guarded task gates · decisions, review records and execution boundary','execution',181,12,
+    for panel in panels:
+        if panel['gridPos']['y']>=10:panel['gridPos']['y']+=12
+        for child in panel.get('panels',[]):child['gridPos']['y']+=12
+    table('Guarded task gates · decisions, review records and execution boundary','execution',10,12,
         'Only tasks launched through the owner controller are in scope. Operator decisions are not authenticated human identity. Completed means client exit, not acceptance. Empty means no recorded task; no enforcement inferred.')
     return {"uid": UID, "title": "Agentic Engineering · Evidence & Usage", "schemaVersion": 41, "version": 1, "timezone": "browser", "refresh": "30s", "time": {"from": "now-30d", "to": "now"},
         "editable": False, "timepicker": {"hidden": True}, "tags": ["engineering-governance", "local-pilot"], "panels": panels,

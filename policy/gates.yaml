@@ -176,6 +176,13 @@
       "**/*[Tt]est*",
       "**/*[Pp]olicy*",
       "**/*[Gg]overnance*"
+    ],
+    "dependency_tool_permission": [
+      "**/*.lock",
+      "**/*.lock.*",
+      "**/*.lockfile",
+      "**/*.lockb",
+      "**/[Ll]ockfile"
     ]
   },
   "review_requirements": "review-requirements.json"
