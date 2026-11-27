@@ -1,8 +1,11 @@
 """Read-only dashboard projections. Missing evidence never becomes compliance."""
 import datetime as dt
 import json
+import collections
 from pathlib import Path
 from common import UTC, now, seconds
+from common import github_url
+from usage import interval_union, FIELDS
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -90,7 +93,7 @@ def health(store, repo):
     result = []
     at = now()
     for r in store.health():
-        if repo != "all" and ":" in r["source"] and r["source"].split(":", 1)[1] not in (repo, "codex",'registry','scope-migration'):
+        if repo != "all" and ":" in r["source"] and r["source"].split(":", 1)[1] not in (repo, "codex",'registry','scope-migration','local'):
             continue
         age = seconds(r["succeeded_at"], at)
         freshness="never succeeded" if age is None else "stale" if age > 900 else "fresh snapshot"
@@ -164,8 +167,55 @@ def summary(store, repo):
     return [{"Measure": key, "Observation": str(value[key]) if value[key] is not None else "Unknown / not collected"} for key in fields]
 
 
+def activities(store,repo):
+    result=[]
+    for r in sorted(rows(store,'activity:',repo),key=lambda r:r['began_at']):
+        m=r['metadata'];u=r['tokens'] or {};a=r['begin'] or {};b=r['end'] or {}
+        result.append({'Repository':r['repository'],'Task':m['task'],'Activity':r['id'],
+            'Phase':m['phase'],'Round':m['round'],'Agent role':m['role'],'Session':r['session'],
+            'Model':r['model'],'State':'open' if not r['ended_at'] else r['outcome'],
+            'Total tokens':u.get('total_tokens'),'Input tokens':u.get('input_tokens'),
+            'Cached input (subset)':u.get('cached_input_tokens'),'Output tokens':u.get('output_tokens'),
+            'Reasoning (subset)':u.get('reasoning_output_tokens'),
+            'Marker elapsed seconds':r['elapsed_seconds'],'Measurement':r['measurement_basis'],
+            'Eligible subtotal':r['eligible'],'Gaps':', '.join(r['flags']) or 'Boundary observations; semantic timing unverified',
+            'Findings':', '.join(dict.fromkeys(m['findings']+r['outcome_findings'])),
+            'Review record':m['review_record'],'Reviewed revision':m['revision'],
+            'Evidence':github_url(r['repository'],('/pull/'+str(m['pr'])) if m['pr'] else ('/commit/'+m['revision']) if m['revision'] else ''),
+            'Began':r['began_at'],'Ended':r['ended_at'],'Begin snapshot':a.get('event_at'),
+            'Begin observation':a.get('captured_at'),'End observation':b.get('captured_at'),
+            'End snapshot':b.get('event_at'),'Begin lag seconds':a.get('lag_seconds'),
+            'End lag seconds':b.get('lag_seconds'),'Attribution':r['association'],
+            'Telemetry model calls':r['instrumentation_model_calls']})
+    return result
+
+
+def activity_totals(store,repo,by_round=False):
+    grouped=collections.defaultdict(list)
+    for r in rows(store,'activity:',repo):
+        m=r['metadata'];key=(r['repository'],m['task'],m['phase'],m['round']) if by_round else (r['repository'],m['task'])
+        grouped[key].append(r)
+    result=[]
+    for key,group in sorted(grouped.items()):
+        eligible=[r for r in group if r['eligible']]; intervals=[]
+        for r in group:
+            if r['ended_at']:
+                intervals.append(tuple(dt.datetime.fromisoformat(r[k].replace('Z','+00:00')).timestamp() for k in ['began_at','ended_at']))
+        result.append({'Repository':key[0],'Task':key[1],
+            'Phase':key[2] if by_round else 'all recorded phases','Round':key[3] if by_round else 'all',
+            'Eligible activities':len(eligible),'Recorded activities':len(group),
+            'Excluded or open':len(group)-len(eligible),
+            'Observed token subtotal':sum(r['tokens']['total_tokens'] for r in eligible) if eligible else None,
+            'Marker seconds (sum)':sum(r['elapsed_seconds'] for r in group if r['elapsed_seconds'] is not None) if intervals else None,
+            'Marker seconds (union)':interval_union(intervals) if intervals else None,
+            'Coverage':'Recorded activities only; historical/uninstrumented work unknown; separate from session totals',
+            'Telemetry model calls':0})
+    return result
+
+
 def dispatch(store, view, repo):
-    handlers = {"overview": overview, "summary": summary,'workspaces':workspaces, "changes": changes, "rules": rule_coverage, "sessions": sessions, "decisions": decisions, "health": health}
+    handlers = {"overview": overview, "summary": summary,'workspaces':workspaces, "changes": changes, "rules": rule_coverage, "sessions": sessions, "decisions": decisions, "health": health,
+        'activities':activities,'activity-tasks':activity_totals,'activity-rounds':lambda s,r:activity_totals(s,r,True)}
     if view == "history":
         return store.history()
     if view == "attempts":

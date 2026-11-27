@@ -5,6 +5,9 @@ from pathlib import Path
 UID = "agentic-engineering-evidence"
 DS = {"type": "yesoreyeram-infinity-datasource", "uid": "governance-evidence"}
 COLUMNS = {
+    'activities':['Task','Phase','Round','Agent role','Model','State','Total tokens','Marker elapsed seconds','Measurement','Gaps','Findings','Activity'],
+    'activity-tasks':['Task','Observed token subtotal','Eligible activities','Recorded activities','Excluded or open','Marker seconds (sum)','Marker seconds (union)','Coverage'],
+    'activity-rounds':['Task','Phase','Round','Observed token subtotal','Eligible activities','Recorded activities','Excluded or open','Marker seconds (sum)','Marker seconds (union)'],
     'workspaces':['Workspace','Branch','Effective approved policy','Local files','Issues','Inventory status','Freshness'],
     "summary": ["Measure", "Observation"],
     "changes": ["Change", "State", "Profile", "Risk", "Planning metadata", "Checks", "PR evidence"],
@@ -34,7 +37,7 @@ def dashboard(api_port=8769, repositories=None):
         panels[-1]["fieldConfig"]["defaults"]["custom"]["minWidth"] = 110
         if view == "summary":
             panels[-1]["fieldConfig"]["overrides"].append({"matcher": {"id": "byName", "options": "Measure"}, "properties": [{"id": "custom.width", "value": 290}]})
-    text("Engineering governance · local pilot", "**Observed evidence and visible gaps.** All applicable policy remains mandatory; **0 requirements are claimed enforced**. Mandatory startup and merge boundaries are not established. ¹ Unevaluated planning is Unknown, not a missing-evidence finding or retrospective violation. ² New token/time attribution requires registered Git identity and remains **unlinked to PRs**. Scope-migration errors preserve historical snapshots without refreshing or relabelling them. Tokens are not billing or pure compute.", 0, 4)
+    text("Engineering governance · local pilot", "**Observed evidence and visible gaps.** All applicable policy remains mandatory; **0 requirements are claimed enforced**. Mandatory startup and merge boundaries are not established. ¹ Unevaluated planning is Unknown, not a retrospective violation. ² Session repository attribution uses registered Git identity; activity task/phase links are **explicitly declared**. Activity subtotals and cumulative session totals are separate measures. Scope errors retain last-known snapshots. Tokens are not billing or pure compute.", 0, 4)
     table("Overview · adopted policy, changes and usage coverage", "summary", 4, 10)
     table("Changes · planning, risk, checks and revision links", "changes", 14, 10, "Approved policy data supports path-risk observation only; action gates are not evaluated. Historical merges do not prove pre-merge readiness. Full evidence includes observation policy version and scope.")
     table("Candidate requirements · automation coverage and evidence limits", "rules", 24, 12, "Candidate catalogue is distinct from My EA’s adopted pin. New candidate rules are not adopted automatically. Guidance-only is not optional after adoption. Metadata presence and semantic/independent review are separate.")
@@ -67,6 +70,19 @@ def dashboard(api_port=8769, repositories=None):
     for index, panel in enumerate(details):
         panel["id"] = 101 + index
     panels.append({"id": 100, "type": "row", "title": "Detailed evidence · expand for complete token/time fields and exact revision links", "collapsed": True, "gridPos": {"x": 0, "y": 101, "w": 24, "h": 1}, "panels": details})
+    for panel in panels:
+        if panel['gridPos']['y']>=10:panel['gridPos']['y']+=29
+        for child in panel.get('panels',[]):child['gridPos']['y']+=29
+    table('Task usage · recorded work, review and remediation','activity-tasks',10,8,
+        'Observed activity subtotals, never added to cumulative session totals. Eligible/all counts expose missing measurements. Historic uninstrumented work is unknown; marker time includes waiting.')
+    table('Phase and review round · initial work, reviewers, fixes and re-review','activity-rounds',18,8,
+        'Phases and task links are declared. Distinct reviewer activities remain available below; repeated context processing counts as usage. Sum and union of marker intervals are separate.')
+    table('Activity detail · each agent and review iteration','activities',26,13,
+        'No LLM calls for capture. Observed boundary-counter deltas have source timestamp lag, not exact semantic phase costs. Open, reset, fork, shared-prefix and overlapping windows are excluded. Rows are recorded work, not synthetic examples.')
+    table('Full activity accounting · boundaries, findings and attribution','activities',155,13,
+        'Complete input/cache/output/reasoning fields, frozen snapshots, boundary lags, findings, revision links and measurement basis. Role labels do not establish reviewer independence.',detailed=True)
+    # The existing collapsed detail row occupies y130 with children through y155.
+    panels[-1]['gridPos']['y']=168
     return {"uid": UID, "title": "Agentic Engineering · Evidence & Usage", "schemaVersion": 41, "version": 1, "timezone": "browser", "refresh": "30s", "time": {"from": "now-30d", "to": "now"},
         "editable": False, "timepicker": {"hidden": True}, "tags": ["engineering-governance", "local-pilot"], "panels": panels,
         "templating": {"list": [{"name": "repo", "label": "Repository", "type": "custom", "query": ','.join(repositories), "current": {"text": "all", "value": "all"}, "options": [{"text": v, "value": v, "selected": v == "all"} for v in repositories], "hide": 0}]}}

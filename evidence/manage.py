@@ -1,5 +1,6 @@
 """Start/stop the local evidence/Grafana pilot. No global installation or config."""
 import argparse
+import base64
 import hashlib
 import importlib.util
 import json
@@ -8,10 +9,13 @@ from pathlib import Path
 import secrets
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
+import urllib.request
 
 ROOT = Path(__file__).resolve().parent.parent
 RUNTIME = ROOT / ".runtime"
@@ -105,6 +109,76 @@ def stop():
     lifecycle("SERVICES_STOPPED")
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, message, headers, newurl):
+        return None
+
+
+def service_ports(settings):
+    ports=[settings.get('api_port'),settings.get('grafana_port')]
+    if any(type(port) is not int or not 1<=port<=65535 for port in ports) or ports[0]==ports[1]:
+        raise ValueError('INVALID_LOCAL_SERVICE_PORTS')
+    return ports
+
+
+def require_free_ports(settings):
+    # Reject an existing listener before spawning or sending any credentials.
+    for port in service_ports(settings):
+        try:
+            with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as probe:
+                probe.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+                probe.bind(('127.0.0.1',port));probe.listen(1)
+        except OSError:raise ValueError('LOCAL_SERVICE_PORT_UNAVAILABLE') from None
+
+
+def services_ready(settings, credentials, deadline=None):
+    """Check actual loopback service readiness without leaking auth to proxies."""
+    ports=service_ports(settings)
+    opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
+    basic=base64.b64encode((credentials['grafana_user']+':'+credentials['grafana_password']).encode()).decode()
+    def read(port,path,authorization=None):
+        remaining=1 if deadline is None else min(1,deadline-time.monotonic())
+        if remaining<=0:return None
+        headers={'Authorization':authorization} if authorization else {}
+        # Grafana enforces its configured localhost domain. Keep the transport
+        # pinned to 127.0.0.1, and supply the expected Host without following redirects.
+        if port==ports[1]:headers['Host']='localhost:'+str(port)
+        request=urllib.request.Request(f'http://127.0.0.1:{port}'+path,headers=headers)
+        with opener.open(request,timeout=remaining) as response:
+            raw=bytearray()
+            while len(raw)<=1024*1024:
+                if deadline is not None and time.monotonic()>=deadline:return None
+                chunk=response.read1(min(65536,1024*1024-len(raw)+1))
+                if not chunk:break
+                raw.extend(chunk)
+            if response.status!=200 or len(raw)>1024*1024:return None
+            return json.loads(raw)
+    try:
+        health=read(ports[1],'/api/health')
+        if not isinstance(health,dict) or health.get('database')!='ok':return False
+        overview=read(ports[0],'/api/overview','Bearer '+credentials['api_token'])
+        if not isinstance(overview,list) or not overview or not isinstance(overview[0],dict) or 'Snapshot' not in overview[0]:return False
+        dashboard=read(ports[1],'/api/dashboards/uid/agentic-engineering-evidence','Basic '+basic)
+        return isinstance(dashboard,dict) and isinstance(dashboard.get('dashboard'),dict) and dashboard['dashboard'].get('uid')=='agentic-engineering-evidence'
+    except (OSError,ValueError,urllib.error.URLError):
+        # Never put response bodies, auth headers or raw vendor errors in logs.
+        return False
+
+
+def wait_ready(settings, processes, credentials, timeout=45):
+    deadline=time.monotonic()+timeout
+    while True:
+        if any(child.poll() is not None for child in processes):
+            raise ValueError('SERVICE_EXITED_BEFORE_READY')
+        if services_ready(settings,credentials,deadline=deadline):
+            if any(child.poll() is not None for child in processes):
+                raise ValueError('SERVICE_EXITED_BEFORE_READY')
+            return
+        remaining=deadline-time.monotonic()
+        if remaining<=0:raise ValueError('SERVICE_START_TIMEOUT')
+        time.sleep(min(.25,remaining))
+
+
 def start():
     os.umask(0o077)
     if (RUNTIME / "processes.json").exists():
@@ -112,6 +186,7 @@ def start():
     if not (GRAFANA / "bin/grafana").is_file():
         raise ValueError("INSTALL_PINNED_GRAFANA_FIRST")
     settings = json.loads((RUNTIME / "settings.json").read_text())
+    require_free_ports(settings)
     # Only allowlisted subprocesses receive authentication context; Grafana gets no GH token.
     grafana_env = {k: v for k, v in os.environ.items() if not any(x in k.upper() for x in ("TOKEN", "SECRET", "API_KEY", "PASSWORD"))}
     api_env = dict(grafana_env, PYTHONDONTWRITEBYTECODE="1")
@@ -130,9 +205,8 @@ def start():
             children[label] = child.pid
             processes.append(child)
             write_private(RUNTIME / "processes.json", children)
-        time.sleep(2)
-        if any(child.poll() is not None for child in processes):
-            raise ValueError("SERVICE_START_FAILED")
+        credentials=json.loads((RUNTIME/'secrets/credentials.json').read_text())
+        wait_ready(settings,processes,credentials)
     except BaseException:
         # In-memory ownership includes a child even if its journal write failed.
         try:

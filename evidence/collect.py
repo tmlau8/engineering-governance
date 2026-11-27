@@ -1,6 +1,7 @@
 """Reconcile authorised GitHub and local usage sources without writing upstream."""
 import argparse
 import json
+import sqlite3
 from pathlib import Path
 import sys
 import threading
@@ -9,6 +10,7 @@ from common import now
 from github import API, APIError, adoption, collect as github_collect
 from store import Store
 from usage import collect as usage_collect
+from activity import collect as activity_collect, prune as activity_prune
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tooling"))
@@ -52,6 +54,13 @@ def run_once(runtime):
     runtime = Path(runtime)
     config = json.loads((runtime / "settings.json").read_text())
     store = Store(runtime / "data/evidence.sqlite")
+    # Activity labels are declared task metadata, independent of policy readiness.
+    try:
+        if store.records('activity:') and not (runtime/'data/activity.sqlite').exists():raise ValueError('ACTIVITY_LEDGER_UNAVAILABLE')
+        activity_prune(runtime)
+        store.snapshot('activity:local',activity_collect(runtime))
+    except (ValueError,TypeError,KeyError,OSError,sqlite3.Error):
+        store.failure('activity:local','ACTIVITY_CAPTURE_UNAVAILABLE')
     try:
         adapters,scopes,missing=workspace_context(runtime,config,store)
     except Exception:

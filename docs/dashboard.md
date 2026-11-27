@@ -73,6 +73,48 @@ Do not run a manual collection concurrently with the background collector.
 
 ## Views and their limits
 
+The phase recorder adds **Task usage**, **Phase and review round**, and
+**Activity detail** views, plus full boundary accounting. Each row identifies
+initial work, a particular reviewer, remediation or re-review, the round,
+session/model, findings/review-record IDs and optional PR/revision. Task and
+phase association is explicitly declared, not inferred from conversation text.
+Uninstrumented historical work remains unknown. Activity subtotals and existing
+cumulative session totals must never be added together.
+
+Start a phase before the work, then close it afterwards. Replace the session
+placeholder with the actual tool session UUID; save the returned activity ID.
+
+```sh
+python3 -B evidence/activity.py begin --repository tmlau8/senior-concierge \
+  --task F-ASSIST-001 --phase initial_work --role builder --round 1 \
+  --session ACTUAL_SESSION_UUID
+python3 -B evidence/activity.py end --id RETURNED_ACTIVITY_UUID --outcome completed
+```
+
+For a fresh reviewer, declare `--agent-path /root/UNIQUE_AGENT_NAME` and
+`--parent-session ACTUAL_PARENT_UUID` instead of `--session` **before dispatch**.
+It must match exactly one new session; role/basename guesses are refused. For a
+resumed reviewer, use its actual UUID. Record separate `review`, `remediation`
+and `re_review` activities with explicit rounds and `--finding FINDING_ID`.
+Review outcomes may append finding IDs with `end --finding FINDING_ID`.
+
+The `run` subcommand accepts the same phase metadata followed by `-- COMMAND
+ARGUMENTS`; it wraps that existing work command once, captures its outcome and
+does not persist command arguments/output. Retrying a claimed command does not
+execute it again. Markers may also prefix existing orchestrator commands. No
+model requests or model classification are used for capture. Native desktop
+chats still need these explicit markers; no automatic client hook is installed.
+
+Counts are observed boundary-counter deltas or a fresh session's observed
+cumulative usage with matched completed turns. Full details show marker times,
+actual observation times, source snapshot times and lags. They are not exact
+semantic phase consumption. Failed close capture stays unknown on retry; it
+cannot be repaired by backdated telemetry. Missing/reset/fork/shared-prefix or
+overlapping windows are excluded with eligible/all counts shown. The recorder's
+private SQLite ledger lives under `.runtime/data`, and existing retention/purge
+cover it. Collection has its own health and continues despite policy-resolution
+failure; it grants no governance approval.
+
 - **Overview and changes:** open PRs plus closed PRs updated in the last 30 days,
   derived path risk, check/review metadata and PR
   links. More than 60 selected changes or incomplete pagination fails visibly.

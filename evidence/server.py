@@ -10,7 +10,7 @@ from collect import ROOT
 from store import Store
 from views import dispatch
 
-VIEWS = {"overview", "summary",'workspaces', "changes", "rules", "sessions", "decisions", "health", "history", "attempts"}
+VIEWS = {"overview", "summary",'workspaces', "changes", "rules", "sessions", "decisions", "health", "history", "attempts",'activities','activity-tasks','activity-rounds'}
 
 
 def make_handler(runtime, token, port, grafana_port, repos):

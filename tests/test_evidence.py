@@ -333,7 +333,7 @@ class RuntimeTests(unittest.TestCase):
                 child = actual_popen([sys.executable, "-c", "import time;time.sleep(20)", str(manage.ROOT)], start_new_session=True)
                 children.append(child); return child
             try:
-                with patch.object(manage, "RUNTIME", runtime), patch.object(manage, "GRAFANA", binary.parent.parent), patch.object(manage.subprocess, "Popen", side_effect=spawn):
+                with patch.object(manage, "RUNTIME", runtime), patch.object(manage, "GRAFANA", binary.parent.parent), patch.object(manage,'require_free_ports'), patch.object(manage.subprocess, "Popen", side_effect=spawn):
                     with self.assertRaises(OSError): manage.start()
                 children[0].wait(timeout=2)
                 self.assertFalse((runtime / "processes.json").exists())
@@ -374,7 +374,7 @@ class RuntimeTests(unittest.TestCase):
                 calls += 1
                 if calls == 2: raise OSError("injected journal failure")
                 return original(path, value)
-            with patch.object(manage, "RUNTIME", runtime), patch.object(manage, "GRAFANA", binary.parent.parent), patch.object(manage, "write_private", side_effect=write), patch.object(manage.subprocess, "Popen", return_value=child), patch.object(manage, "stop_children") as stop:
+            with patch.object(manage, "RUNTIME", runtime), patch.object(manage, "GRAFANA", binary.parent.parent), patch.object(manage,'require_free_ports'), patch.object(manage, "write_private", side_effect=write), patch.object(manage.subprocess, "Popen", return_value=child), patch.object(manage, "stop_children") as stop:
                 with self.assertRaises(OSError): manage.start()
                 stop.assert_called_once_with({"collector": 1234})
 
@@ -394,6 +394,82 @@ class RuntimeTests(unittest.TestCase):
                 self.assertFalse(db.exists()); self.assertFalse((runtime / "secrets").exists()); self.assertFalse((runtime / "logs").exists())
                 self.assertEqual(upstream.read_text(), "preserve")
                 store = Store(db); self.assertEqual(store.history(), []); store.close()
+
+
+class StartupReadinessTests(unittest.TestCase):
+    def test_alive_processes_wait_for_real_readiness(self):
+        import manage
+        child=type('Child',(),{'poll':lambda self:None})()
+        with patch.object(manage,'services_ready',side_effect=[False,False,True]) as probe, \
+             patch.object(manage.time,'sleep') as sleep, patch.object(manage.time,'monotonic',side_effect=[0,.1,.2]):
+            manage.wait_ready({},[child],{},timeout=5)
+        self.assertEqual(probe.call_count,3);self.assertEqual(sleep.call_count,2)
+
+    def test_timeout_and_exited_child_do_not_report_ready(self):
+        import manage
+        alive=type('Child',(),{'poll':lambda self:None})();dead=type('Child',(),{'poll':lambda self:1})()
+        with patch.object(manage,'services_ready',return_value=False),patch.object(manage.time,'monotonic',side_effect=[0,5]):
+            with self.assertRaisesRegex(ValueError,'SERVICE_START_TIMEOUT'):manage.wait_ready({},[alive],{},timeout=1)
+        with patch.object(manage,'services_ready') as probe:
+            with self.assertRaisesRegex(ValueError,'EXITED_BEFORE_READY'):manage.wait_ready({},[dead],{})
+            probe.assert_not_called()
+
+    def test_exact_authenticated_checks_disable_proxy_and_redirect(self):
+        import manage
+        from unittest.mock import MagicMock
+        payloads=[{'database':'ok'},[{'Snapshot':'observed'}],{'dashboard':{'uid':'agentic-engineering-evidence'}}]
+        responses=[]
+        for payload in payloads:
+            response=MagicMock();response.status=200
+            response.read1.side_effect=[json.dumps(payload).encode(),b'']
+            response.__enter__.return_value=response;responses.append(response)
+        opener=MagicMock();opener.open.side_effect=responses
+        credentials={'grafana_user':'test','grafana_password':'PRIVATE_PASSWORD','api_token':'PRIVATE_TOKEN'}
+        with patch.object(manage.urllib.request,'build_opener',return_value=opener) as build:
+            self.assertTrue(manage.services_ready({'api_port':8769,'grafana_port':3001},credentials))
+        self.assertEqual(build.call_args.args[0].proxies,{})
+        self.assertIsInstance(build.call_args.args[1],manage.NoRedirect)
+        requests=[call.args[0] for call in opener.open.call_args_list]
+        self.assertTrue(all(r.full_url.startswith('http://127.0.0.1:') for r in requests))
+        self.assertEqual(requests[0].get_header('Host'),'localhost:3001')
+        self.assertEqual(requests[2].get_header('Host'),'localhost:3001')
+        self.assertIsNone(requests[1].get_header('Host'))
+        self.assertEqual(requests[1].get_header('Authorization'),'Bearer PRIVATE_TOKEN')
+        self.assertIsNone(manage.NoRedirect().redirect_request(None,None,302,'',{},'https://untrusted.invalid'))
+
+    def test_invalid_port_rejected_before_network(self):
+        import manage
+        with patch.object(manage.urllib.request,'build_opener') as opener:
+            with self.assertRaisesRegex(ValueError,'INVALID_LOCAL_SERVICE_PORTS'):
+                manage.services_ready({'api_port':'8769','grafana_port':3001},{})
+            opener.assert_not_called()
+
+    def test_occupied_ports_prevent_spawn_and_authentication(self):
+        import manage
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime=Path(tmp);(runtime/'settings.json').write_text('{}')
+            binary=runtime/'software/bin/grafana';binary.parent.mkdir(parents=True);binary.touch()
+            with patch.object(manage,'RUNTIME',runtime),patch.object(manage,'GRAFANA',binary.parent.parent), \
+                 patch.object(manage,'require_free_ports',side_effect=ValueError('LOCAL_SERVICE_PORT_UNAVAILABLE')), \
+                 patch.object(manage.subprocess,'Popen') as spawn,patch.object(manage,'services_ready') as probe:
+                with self.assertRaisesRegex(ValueError,'PORT_UNAVAILABLE'):manage.start()
+            spawn.assert_not_called();probe.assert_not_called();self.assertFalse((runtime/'processes.json').exists())
+
+    def test_readiness_failure_uses_owned_cleanup_and_no_success_output(self):
+        import manage,io,contextlib
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime=Path(tmp);(runtime/'settings.json').write_text('{}');(runtime/'secrets').mkdir()
+            (runtime/'secrets/credentials.json').write_text('{}')
+            binary=runtime/'software/bin/grafana';binary.parent.mkdir(parents=True);binary.touch()
+            children=[type('Child',(),{'pid':i})() for i in [1001,1002,1003]];output=io.StringIO()
+            with patch.object(manage,'RUNTIME',runtime),patch.object(manage,'GRAFANA',binary.parent.parent), \
+                 patch.object(manage,'require_free_ports'),patch.object(manage.subprocess,'Popen',side_effect=children), \
+                 patch.object(manage,'wait_ready',side_effect=ValueError('SERVICE_START_TIMEOUT')), \
+                 patch.object(manage,'stop_children') as cleanup,patch.object(manage,'lifecycle') as lifecycle,contextlib.redirect_stdout(output):
+                with self.assertRaisesRegex(ValueError,'SERVICE_START_TIMEOUT'):manage.start()
+            cleanup.assert_called_once_with({'collector':1001,'api':1002,'grafana':1003})
+            lifecycle.assert_not_called();self.assertNotIn('Dashboard:',output.getvalue())
+            self.assertFalse((runtime/'processes.json').exists())
 
 
 class APIBoundaryTests(unittest.TestCase):
