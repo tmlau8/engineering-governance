@@ -6,9 +6,11 @@
 - All live Grafana panel queries passed for all configured repository filters,
   including task, phase/round and activity views. Responses were checked for
   generated credential values. This is telemetry validation, not governance clearance.
-- Live task-summary rendering inspected in gstack browser. Detailed activity
-  visual inspection and temporary fixture cleanup remain to finish after the
-  execution-approval service becomes available again.
+- Live task summary and per-agent activity table inspected in gstack browser.
+  Initial work, separate Security/Quality reviews, remediation and round-two
+  re-review render with explicit unknown/open values where applicable. The
+  temporary TEST ONLY dashboard was removed after verification. The clarified
+  attribution banner was provisioned into the running dashboard.
 - Actual independent-reviewer sessions were recorded separately with observed
   boundary-counter deltas. Historical uninstrumented work remains unknown. One
   early capture missing the final identity digest was excluded rather than repaired.
@@ -50,5 +52,6 @@ execution were performed separately by the implementing agent and operator.
 No policy release, project adoption, human-merge authority or enforced execution
 boundary is implied. Existing broad workspace/session evidence and activity
 subtotals are distinct. Native desktop chats require explicit phase instrumentation;
-no global client hooks were installed. GitHub publication and remaining operational
-verification must be confirmed, not inferred from this record.
+no global client hooks were installed. PR #5 publishes this candidate; both Python matrix jobs passed. Final browser
+inspection and fixture cleanup completed on 27 November 2026. These observations
+do not establish project adoption or enforced execution controls.
