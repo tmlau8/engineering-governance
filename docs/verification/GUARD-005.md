@@ -102,3 +102,11 @@ fixture passes for both projects, including Terraform/Brew cases and ClockView/
 BlockedState negative cases. Security and Quality cleared this stricter mapping;
 controller digest is now `668081eafa66ddbc4502cb6c3cccb77e7c39f4cf2ad3b378faa6f9d737771a3d`.
 No source authority profile changed; no real task permission was issued.
+
+The first remote 170-test matrix exposed a fixture dependency on the developer's
+existing Codex session folder: the mocked client correctly reported unavailable
+telemetry on a fresh runner, contradicting the test's assumed completed state.
+The successful mock case now uses an explicit empty discovery fixture; a separate
+snapshot-failure assertion preserves completed__usage_unavailable and its stored
+observation. Independent Quality inspected/reran this correction (19 controller
+tests passed). No production check or expected rejection was weakened.

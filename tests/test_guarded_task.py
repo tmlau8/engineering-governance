@@ -125,7 +125,7 @@ class RealPrepareTests(unittest.TestCase):
             reviews.write_text(json.dumps(review_fixtures.bundle(expected)));packet=gate.prepare(*args)
             self.assertEqual(packet['risk'],'high');self.assertEqual(packet['triggers'],['assurance'])
             gate.approve(runtime,packet['id'],gate.digest(packet))
-            with patch.object(gate,'source',return_value=packet['source']),patch.object(gate.subprocess,'Popen') as spawn:
+            with patch('activity.source_paths',return_value=[]),patch.object(gate,'source',return_value=packet['source']),patch.object(gate.subprocess,'Popen') as spawn:
                 spawn.return_value.returncode=0
                 self.assertEqual(gate.execute(runtime,packet['id'],executable),'completed')
                 self.assertTrue(spawn.call_args.kwargs['close_fds']);self.assertEqual(set(spawn.call_args.kwargs['env']),{'PATH','HOME','CODEX_HOME'})
@@ -136,6 +136,11 @@ class RealPrepareTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,'CLIENT_CAPABILITY'):gate.execute(runtime,packet['id'],executable)
                 spawn.assert_not_called()
             self.assertEqual(gate.observations(runtime)[0]['state'],'launch_blocked')
+            receipt_file.write_text(json.dumps(receipt));packet=gate.prepare(*args);gate.approve(runtime,packet['id'],gate.digest(packet))
+            with patch('activity.snapshot',side_effect=OSError('synthetic missing telemetry')),patch.object(gate,'source',return_value=packet['source']),patch.object(gate.subprocess,'Popen') as spawn:
+                spawn.return_value.returncode=0
+                self.assertEqual(gate.execute(runtime,packet['id'],executable),'completed__usage_unavailable')
+            self.assertEqual(gate.observations(runtime)[0]['state'],'completed__usage_unavailable')
     def test_both_executable_mode_changes_and_custom_default_are_blocked(self):
         import subprocess
         with tempfile.TemporaryDirectory() as directory:
