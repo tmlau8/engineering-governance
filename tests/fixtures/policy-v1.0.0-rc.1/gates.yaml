@@ -1,0 +1,181 @@
+{
+  "version": "1.0.0-rc.1",
+  "format": "JSON-compatible YAML; parsed with the Python standard library",
+  "enabled_profiles": [
+    "fix"
+  ],
+  "triggers": [
+    {
+      "id": "security",
+      "description": "Security boundary or sensitive data"
+    },
+    {
+      "id": "data",
+      "description": "Data or schema migration"
+    },
+    {
+      "id": "dependency_tool_permission",
+      "description": "Dependency, tool or agent-permission change"
+    },
+    {
+      "id": "infrastructure",
+      "description": "Infrastructure or deployment change"
+    },
+    {
+      "id": "assurance",
+      "description": "CI, test or policy change; always high"
+    }
+  ],
+  "decisions": [
+    {
+      "profile": "fix",
+      "risk": "low",
+      "planning": "compact",
+      "before_delegation": [
+        "planning",
+        "classification_analysis"
+      ],
+      "before_merge": [
+        "verification_summary",
+        "checks",
+        "human_acceptance"
+      ],
+      "before_release": [
+        "readiness",
+        "rollback",
+        "release_authorization"
+      ]
+    },
+    {
+      "profile": "fix",
+      "risk": "high",
+      "planning": "full",
+      "before_delegation": [
+        "planning",
+        "classification_analysis",
+        "risk_analysis",
+        "review_plan"
+      ],
+      "before_merge": [
+        "verification_summary",
+        "checks",
+        "human_acceptance",
+        "risk_review"
+      ],
+      "before_release": [
+        "readiness",
+        "rollback",
+        "release_authorization",
+        "containment",
+        "follow_up"
+      ]
+    },
+    {
+      "profile": "enhancement",
+      "risk": "low",
+      "planning": "compact",
+      "before_delegation": [
+        "planning",
+        "classification_analysis",
+        "design_note"
+      ],
+      "before_merge": [
+        "verification_summary",
+        "checks",
+        "human_acceptance"
+      ],
+      "before_release": [
+        "readiness",
+        "rollback",
+        "release_authorization"
+      ]
+    },
+    {
+      "profile": "enhancement",
+      "risk": "high",
+      "planning": "full",
+      "before_delegation": [
+        "planning",
+        "classification_analysis",
+        "design_note",
+        "risk_analysis",
+        "review_plan"
+      ],
+      "before_merge": [
+        "verification_summary",
+        "checks",
+        "human_acceptance",
+        "risk_review"
+      ],
+      "before_release": [
+        "readiness",
+        "rollback",
+        "release_authorization",
+        "containment",
+        "follow_up"
+      ]
+    },
+    {
+      "profile": "feature",
+      "risk": "low",
+      "planning": "full",
+      "before_delegation": [
+        "planning",
+        "classification_analysis",
+        "design_note",
+        "parent_closure"
+      ],
+      "before_merge": [
+        "verification_summary",
+        "checks",
+        "human_acceptance",
+        "parent_scope"
+      ],
+      "before_release": [
+        "readiness",
+        "rollback",
+        "release_authorization",
+        "parent_closure"
+      ]
+    },
+    {
+      "profile": "feature",
+      "risk": "high",
+      "planning": "full",
+      "before_delegation": [
+        "planning",
+        "classification_analysis",
+        "design_note",
+        "parent_closure",
+        "risk_analysis",
+        "review_plan"
+      ],
+      "before_merge": [
+        "verification_summary",
+        "checks",
+        "human_acceptance",
+        "risk_review",
+        "parent_scope"
+      ],
+      "before_release": [
+        "readiness",
+        "rollback",
+        "release_authorization",
+        "containment",
+        "follow_up",
+        "parent_closure"
+      ]
+    }
+  ],
+  "mandatory_paths": {
+    "assurance": [
+      ".github/**",
+      ".governance/**",
+      "**/AGENTS.md",
+      "**/CLAUDE.md",
+      "**/*[Tt]est*",
+      "**/*[Pp]olicy*",
+      "**/*[Gg]overnance*"
+    ]
+  }
+}

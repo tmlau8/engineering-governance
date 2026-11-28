@@ -1,0 +1,352 @@
+{
+  "records": [
+    {
+      "schema_version": 1,
+      "record_id": "SYNTHETIC-adversarial",
+      "policy_version": "1.1.0-rc.1",
+      "repository": "tmlau8/my-ea",
+      "change_id": "FIX-EXAMPLE",
+      "review_type": "adversarial",
+      "trigger_ids": [
+        "assurance"
+      ],
+      "rule_ids": [
+        "CODE-024",
+        "CODE-046"
+      ],
+      "reviewed_revision": {
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "builder": {
+        "kind": "agent",
+        "id": "builder-agent-1",
+        "provenance": {
+          "tool": "example-agent-tool",
+          "tool_version": "0.0.0",
+          "model": "example-model-id",
+          "configuration_ref": "synthetic"
+        },
+        "session_id": "synthetic-builder-session"
+      },
+      "reviewer": {
+        "kind": "agent",
+        "id": "synthetic-reviewer-adversarial",
+        "provenance": {
+          "tool": "example-agent-tool",
+          "tool_version": "0.0.0",
+          "model": "example-model-id"
+        },
+        "session_id": "synthetic-session-adversarial"
+      },
+      "independence": {
+        "basis": "separate_agent_session",
+        "shared_context_with_builder": false,
+        "same_model_as_builder": true,
+        "notes": "Fresh session; received the diff and specification only.",
+        "same_model_family_as_builder": true,
+        "builder_conclusions_as_premises": false,
+        "credential_separation": "separate"
+      },
+      "scope": {
+        "assignment": "Challenge whether the added regression test proves the stated acceptance criterion and was not weakened.",
+        "paths_in_scope": [
+          "MyEATests/TitleFormattingTests.swift"
+        ],
+        "not_in_scope": [
+          "UI behaviour"
+        ]
+      },
+      "artifacts_inspected": [
+        {
+          "kind": "diff",
+          "reference": "PR diff at reviewed head",
+          "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "sha256": "932f76b50137d001262ef052e4e1aaf582bf968493b7281c2de501a22075cbec"
+        },
+        {
+          "kind": "specification",
+          "reference": "Synthetic compact specification",
+          "sha256": "b1ef95dc6556b5deab67fb32cb8fa1f34024f2fbe3ec4e67d5c457194b97faba"
+        }
+      ],
+      "claims_examined": [
+        {
+          "claim": "The regression test fails on the unfixed code and passes on the fixed code.",
+          "verdict": "supported",
+          "evidence": [
+            {
+              "kind": "test_output",
+              "reference": "Synthetic run before and after the fix",
+              "sha256": "01f1e9dfadfe3fecb9b7c9a05ba369e3923e30b403814114335828341a9193ba"
+            }
+          ],
+          "connecting_explanation": "The failing run uses the pre-fix revision and asserts the exact whitespace behaviour named in the acceptance criterion."
+        }
+      ],
+      "counterexamples_attempted": [
+        {
+          "description": "Empty and whitespace-only input",
+          "method": "Added cases run against the fix",
+          "outcome": "held"
+        }
+      ],
+      "findings": [
+        {
+          "id": "F-1",
+          "severity": "low",
+          "description": "Test name does not mention the empty-input case.",
+          "disposition": {
+            "state": "fixed",
+            "reference": "Synthetic follow-up commit"
+          }
+        }
+      ],
+      "no_substantive_challenge": false,
+      "outcome": "cleared",
+      "limitations": [
+        "Synthetic example, not a real review.",
+        "Physical-device behaviour not examined.",
+        "Credential separation and origin are synthetic declarations, not operational evidence."
+      ],
+      "created_at": "2026-11-04T12:00:00Z",
+      "authenticity": {
+        "basis": "declared"
+      }
+    },
+    {
+      "schema_version": 1,
+      "record_id": "SYNTHETIC-quality",
+      "policy_version": "1.1.0-rc.1",
+      "repository": "tmlau8/my-ea",
+      "change_id": "FIX-EXAMPLE",
+      "review_type": "quality",
+      "trigger_ids": [
+        "assurance"
+      ],
+      "rule_ids": [
+        "CODE-024",
+        "CODE-046"
+      ],
+      "reviewed_revision": {
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "builder": {
+        "kind": "agent",
+        "id": "builder-agent-1",
+        "provenance": {
+          "tool": "example-agent-tool",
+          "tool_version": "0.0.0",
+          "model": "example-model-id",
+          "configuration_ref": "synthetic"
+        },
+        "session_id": "synthetic-builder-session"
+      },
+      "reviewer": {
+        "kind": "agent",
+        "id": "synthetic-reviewer-quality",
+        "provenance": {
+          "tool": "example-agent-tool",
+          "tool_version": "0.0.0",
+          "model": "example-model-id"
+        },
+        "session_id": "synthetic-session-quality"
+      },
+      "independence": {
+        "basis": "separate_agent_session",
+        "shared_context_with_builder": false,
+        "same_model_as_builder": true,
+        "notes": "Fresh session; received the diff and specification only.",
+        "same_model_family_as_builder": true,
+        "builder_conclusions_as_premises": false,
+        "credential_separation": "separate"
+      },
+      "scope": {
+        "assignment": "Challenge whether the added regression test proves the stated acceptance criterion and was not weakened.",
+        "paths_in_scope": [
+          "MyEATests/TitleFormattingTests.swift"
+        ],
+        "not_in_scope": [
+          "UI behaviour"
+        ]
+      },
+      "artifacts_inspected": [
+        {
+          "kind": "diff",
+          "reference": "PR diff at reviewed head",
+          "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "sha256": "932f76b50137d001262ef052e4e1aaf582bf968493b7281c2de501a22075cbec"
+        },
+        {
+          "kind": "specification",
+          "reference": "Synthetic compact specification",
+          "sha256": "b1ef95dc6556b5deab67fb32cb8fa1f34024f2fbe3ec4e67d5c457194b97faba"
+        }
+      ],
+      "claims_examined": [
+        {
+          "claim": "The regression test fails on the unfixed code and passes on the fixed code.",
+          "verdict": "supported",
+          "evidence": [
+            {
+              "kind": "test_output",
+              "reference": "Synthetic run before and after the fix",
+              "sha256": "01f1e9dfadfe3fecb9b7c9a05ba369e3923e30b403814114335828341a9193ba"
+            }
+          ],
+          "connecting_explanation": "The failing run uses the pre-fix revision and asserts the exact whitespace behaviour named in the acceptance criterion."
+        }
+      ],
+      "counterexamples_attempted": [
+        {
+          "description": "Empty and whitespace-only input",
+          "method": "Added cases run against the fix",
+          "outcome": "held"
+        }
+      ],
+      "findings": [
+        {
+          "id": "F-1",
+          "severity": "low",
+          "description": "Test name does not mention the empty-input case.",
+          "disposition": {
+            "state": "fixed",
+            "reference": "Synthetic follow-up commit"
+          }
+        }
+      ],
+      "no_substantive_challenge": false,
+      "outcome": "cleared",
+      "limitations": [
+        "Synthetic example, not a real review.",
+        "Physical-device behaviour not examined.",
+        "Credential separation and origin are synthetic declarations, not operational evidence."
+      ],
+      "created_at": "2026-11-04T12:00:00Z",
+      "authenticity": {
+        "basis": "declared"
+      }
+    },
+    {
+      "schema_version": 1,
+      "record_id": "SYNTHETIC-specialist",
+      "policy_version": "1.1.0-rc.1",
+      "repository": "tmlau8/my-ea",
+      "change_id": "FIX-EXAMPLE",
+      "review_type": "specialist",
+      "trigger_ids": [
+        "assurance"
+      ],
+      "rule_ids": [
+        "CODE-024",
+        "CODE-046"
+      ],
+      "reviewed_revision": {
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "builder": {
+        "kind": "agent",
+        "id": "builder-agent-1",
+        "provenance": {
+          "tool": "example-agent-tool",
+          "tool_version": "0.0.0",
+          "model": "example-model-id",
+          "configuration_ref": "synthetic"
+        },
+        "session_id": "synthetic-builder-session"
+      },
+      "reviewer": {
+        "kind": "agent",
+        "id": "synthetic-reviewer-specialist",
+        "provenance": {
+          "tool": "example-agent-tool",
+          "tool_version": "0.0.0",
+          "model": "example-model-id"
+        },
+        "session_id": "synthetic-session-specialist"
+      },
+      "independence": {
+        "basis": "separate_agent_session",
+        "shared_context_with_builder": false,
+        "same_model_as_builder": true,
+        "notes": "Fresh session; received the diff and specification only.",
+        "same_model_family_as_builder": true,
+        "builder_conclusions_as_premises": false,
+        "credential_separation": "separate"
+      },
+      "scope": {
+        "assignment": "Challenge whether the added regression test proves the stated acceptance criterion and was not weakened.",
+        "paths_in_scope": [
+          "MyEATests/TitleFormattingTests.swift"
+        ],
+        "not_in_scope": [
+          "UI behaviour"
+        ]
+      },
+      "artifacts_inspected": [
+        {
+          "kind": "diff",
+          "reference": "PR diff at reviewed head",
+          "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "sha256": "932f76b50137d001262ef052e4e1aaf582bf968493b7281c2de501a22075cbec"
+        },
+        {
+          "kind": "specification",
+          "reference": "Synthetic compact specification",
+          "sha256": "b1ef95dc6556b5deab67fb32cb8fa1f34024f2fbe3ec4e67d5c457194b97faba"
+        }
+      ],
+      "claims_examined": [
+        {
+          "claim": "The regression test fails on the unfixed code and passes on the fixed code.",
+          "verdict": "supported",
+          "evidence": [
+            {
+              "kind": "test_output",
+              "reference": "Synthetic run before and after the fix",
+              "sha256": "01f1e9dfadfe3fecb9b7c9a05ba369e3923e30b403814114335828341a9193ba"
+            }
+          ],
+          "connecting_explanation": "The failing run uses the pre-fix revision and asserts the exact whitespace behaviour named in the acceptance criterion."
+        }
+      ],
+      "counterexamples_attempted": [
+        {
+          "description": "Empty and whitespace-only input",
+          "method": "Added cases run against the fix",
+          "outcome": "held"
+        }
+      ],
+      "findings": [
+        {
+          "id": "F-1",
+          "severity": "low",
+          "description": "Test name does not mention the empty-input case.",
+          "disposition": {
+            "state": "fixed",
+            "reference": "Synthetic follow-up commit"
+          }
+        }
+      ],
+      "no_substantive_challenge": false,
+      "outcome": "cleared",
+      "limitations": [
+        "Synthetic example, not a real review.",
+        "Physical-device behaviour not examined.",
+        "Credential separation and origin are synthetic declarations, not operational evidence."
+      ],
+      "created_at": "2026-11-04T12:00:00Z",
+      "authenticity": {
+        "basis": "declared"
+      },
+      "specialist": "synthetic-test-specialist"
+    }
+  ],
+  "artifacts": {
+    "PR diff at reviewed head": "U1lOVEhFVElDIE9OTFk6IFBSIGRpZmYgYXQgcmV2aWV3ZWQgaGVhZA==",
+    "Synthetic compact specification": "U1lOVEhFVElDIE9OTFk6IFN5bnRoZXRpYyBjb21wYWN0IHNwZWNpZmljYXRpb24=",
+    "Synthetic run before and after the fix": "U1lOVEhFVElDIE9OTFk6IFN5bnRoZXRpYyBydW4gYmVmb3JlIGFuZCBhZnRlciB0aGUgZml4"
+  }
+}

@@ -1,9 +1,9 @@
 {
-  "as_of": "2026-11-04",
+  "as_of": "2026-11-05",
   "scope": "Implementation status, not repeal or normative priority of standing source rules.",
   "enforced": 0,
-  "detected": 3,
-  "guidance_only": 35,
+  "detected": 5,
+  "guidance_only": 45,
   "requirements": [
     {
       "id": "CODE-001",
@@ -345,6 +345,114 @@
       "coverage": "not_implemented_in_pilot",
       "basis": "Existing source guidance; no pilot detector or enforcement claimed.",
       "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-039",
+      "title": "Keep agent identities and credentials separate from human authority",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Acceptance-basis reporting is implemented: owner/self-acceptance is explicit and physical human identity remains unverified. Separate agent identities, constrained credentials and technical permission enforcement remain unmet operational capabilities; this rule is guidance-only.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-040",
+      "title": "Grant agents least-privilege, task-scoped, expiring credentials",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Proposed rule; no detector claimed. Candidate detection: token scope and expiry check at issuance, outside the candidate change.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-041",
+      "title": "Declare the agent's authority envelope before delegation",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Proposed rule; no detector claimed. Partial overlap: agent-permission changes already raise risk by path. Candidate detection: envelope reference present in the change metadata.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-042",
+      "title": "Treat content the agent reads as untrusted data, not instructions",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Proposed rule; no detector claimed. Runtime behaviour of the agent is not observable by metadata checks.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-043",
+      "title": "Record provenance of agent-authored changes",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Proposed rule; no detector claimed. Candidate detection: presence of provenance trailers or a PR metadata block. Does not verify truth.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-044",
+      "title": "Keep restricted data out of model context unless the boundary is approved",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Proposed rule; no detector claimed. Candidate detection: provider recorded in provenance and checked against an approved list.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-045",
+      "title": "Bound agent autonomy with budgets and stop conditions",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Proposed rule; no detector claimed. Limits are runtime configuration of the agent tool.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-046",
+      "title": "Never weaken verification to obtain a pass",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Proposed rule; no detector claimed. Partial overlap: assurance-path changes are already always high risk. Candidate detection: diff heuristics for removed assertions, added skips and weakened thresholds, reported for human review.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-047",
+      "title": "Report agent outcomes by verification state",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Proposed rule; no detector claimed. Candidate detection: required fields in a handoff template.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-048",
+      "title": "Record each required review in the review-record schema",
+      "status": "detected",
+      "coverage": "partial",
+      "basis": "Detects review-record structure, supplied artifact byte hashes, subject/revision and declared role coverage. Does not authenticate reviewer origin, credentials, independence or semantic quality.",
+      "priority": "pilot",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-049",
+      "title": "Declare and justify independence for agent reviewers",
+      "status": "guidance_only",
+      "coverage": "not_implemented_in_pilot",
+      "basis": "Proposed rule; no detector claimed. Candidate detection: declared independence fields and identity inequality. Declared context sharing cannot be verified. Same-model and same-family reviewers are accepted as independent by decision; the shared-blind-spot risk remains a limitation of this control.",
+      "priority": "deferred",
+      "original_requirement_still_applies": true
+    },
+    {
+      "id": "CODE-050",
+      "title": "Require a defined set of reviews for every triggered change",
+      "status": "detected",
+      "coverage": "partial",
+      "basis": "Detects review-record structure, supplied artifact byte hashes, subject/revision and declared role coverage. Does not authenticate reviewer origin, credentials, independence or semantic quality.",
+      "priority": "pilot",
       "original_requirement_still_applies": true
     }
   ]

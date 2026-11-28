@@ -6,8 +6,8 @@ Existing project instructions add stack-specific obligations; do not copy the
 shared policy into parallel independently maintained rule lists.
 
 Use feature branches and PRs. Human merge and explicit release authority remain
-separate. Initial release publication is authorised by Albert, with its bootstrap
-source PR left open. No other default-branch commit or merge is implied.
+separate. Publication and merge authorisations belong to their scoped release/PR
+records; none is granted by this standing contributor contract.
 
 Triggered work requires the independent specialists, adversarial and quality
 review required by the policy. Independent principal review precedes substantive
@@ -17,5 +17,6 @@ them. Use gstack browse for web browsing; client-specific hooks do not transfer.
 
 Never publish personal source snapshots, classified project data or credentials.
 Use trusted policy and adapter configuration when evaluating candidate changes.
-Run `PYTHONPATH=tooling python3 -m unittest discover -s tests` for tooling changes.
+Install the hash-locked review-validator dependencies, then run
+`PYTHONPATH=tooling:evidence python3 -B -m unittest discover -s tests` for tooling changes.
 Build a fresh release bundle and verify its exact bytes before publication.

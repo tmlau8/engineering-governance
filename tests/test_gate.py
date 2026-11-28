@@ -1,6 +1,9 @@
 import json
 from pathlib import Path
 import unittest
+import subprocess
+import sys
+import tempfile
 from check_gate import evaluate
 from load_policy import load_policy
 
@@ -17,8 +20,41 @@ def facts():
 
 
 class GateTests(unittest.TestCase):
+    def test_cli_exit_follows_new_metadata_contract(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);c=root/'change.json';p=root/'paths.json';c.write_text(json.dumps(change()));p.write_text('["a.swift"]')
+            tool=Path(__file__).resolve().parent.parent
+            command=[sys.executable,'-B',str(tool/'tooling/check_gate.py'),'--project',str(tool/'adapters/my-ea.json'),'--change',str(c),'--paths',str(p),'--stage','before_delegation']
+            run=subprocess.run(command,capture_output=True,text=True);self.assertEqual(run.returncode,0);self.assertEqual(json.loads(run.stdout)['result'],'metadata_conforming')
+            c.write_text('{"id":"one","id":"two"}');self.assertNotEqual(subprocess.run(command,capture_output=True).returncode,0)
+    def test_acceptance_basis_and_active_dissent_are_explicit(self):
+        f=facts(); f['pr_author']='tmlau8'; f['reviews'][0].update(source='github_comment_self_acceptance',self_acceptance=True)
+        report=evaluate(POLICY,change(),['a.swift'],'before_merge',f)
+        self.assertEqual(report['result'],'metadata_conforming')
+        self.assertEqual(report['acceptance_basis']['records'][0]['basis'],'self_acceptance')
+        self.assertFalse(report['acceptance_basis']['physical_human_verified'])
+        f['reviews'].append({'actor':'other-human','actor_type':'User','state':'CHANGES_REQUESTED','commit':SHA})
+        self.assertEqual(evaluate(POLICY,change(),['a.swift'],'before_merge',f)['result'],'failed')
+
+    def test_security_and_dependency_routing_regressions(self):
+        for name in ['TokenStore.swift','CredentialManager.swift','SessionManager.swift','Login.swift','Info.plist','Cargo.lock','Package.resolved','pnpm-lock.yaml']:
+            self.assertEqual(evaluate(POLICY,change(),['Modules/Nested/'+name],'before_delegation')['risk'],'high',name)
+        for name in ['ClockView.swift','BlockedStateView.swift','Title.swift']:
+            self.assertEqual(evaluate(POLICY,change(),['Modules/Nested/'+name],'before_delegation')['risk'],'low',name)
+
+    def test_placeholder_evidence_is_never_called_verified(self):
+        c=change();c['evidence']['classification_analysis']='n/a'
+        r=evaluate(POLICY,c,['a.swift'],'before_delegation')
+        self.assertEqual(r['result'],'metadata_conforming');self.assertIn('metadata_only',r['assurance'])
+        self.assertNotIn('satisfied',r.values())
+
+    def test_high_merge_has_no_green_when_review_transport_unavailable(self):
+        c=change();c['evidence'].update(planning={'kind':'full','reference':'spec'},risk_analysis='scope',review_plan='reviewers',risk_review='placeholder')
+        r=evaluate(POLICY,c,['Auth.swift'],'before_merge',facts())
+        self.assertEqual(r['result'],'failed');self.assertEqual(r['review_validation']['result'],'unavailable')
+
     def test_compact_preflight(self):
-        self.assertEqual(evaluate(POLICY, change(), ["MyEA/Helpers/Title.swift"], "before_delegation")["result"], "satisfied")
+        self.assertEqual(evaluate(POLICY, change(), ["MyEA/Helpers/Title.swift"], "before_delegation")["result"], "metadata_conforming")
 
     def test_missing_scope_fails(self):
         c = change(); c["scope"] = []
@@ -41,7 +77,7 @@ class GateTests(unittest.TestCase):
         self.assertEqual(evaluate(POLICY, c, ["a.swift"], "before_delegation")["risk"], "high")
 
     def test_merge_checks_current_revision_and_source(self):
-        self.assertEqual(evaluate(POLICY, change(), ["a.swift"], "before_merge", facts())["result"], "satisfied")
+        self.assertEqual(evaluate(POLICY, change(), ["a.swift"], "before_merge", facts())["result"], "metadata_conforming")
         for field, value in [("head_sha", "2" * 40), ("producer", "fake"), ("conclusion", "skipped"), ("workflow", "other.yml")]:
             f = facts(); f["checks"][0][field] = value
             self.assertEqual(evaluate(POLICY, change(), ["a.swift"], "before_merge", f)["result"], "failed")
@@ -75,7 +111,7 @@ class GateTests(unittest.TestCase):
         f = facts()
         self.assertEqual(evaluate(POLICY, c, ["a.swift"], "before_release", f)["result"], "failed")
         f["release_authorization"] = {"actor": "tmlau8", "actor_type": "User", "commit": SHA, "reference": "release decision"}
-        self.assertEqual(evaluate(POLICY, c, ["a.swift"], "before_release", f)["result"], "satisfied")
+        self.assertEqual(evaluate(POLICY, c, ["a.swift"], "before_release", f)["result"], "metadata_conforming")
 
     def test_paths_are_complete_and_relative(self):
         for paths in [[], ["../gates.yaml"], ["/etc/passwd"], ["a\\b"]]:
@@ -95,13 +131,18 @@ class GateTests(unittest.TestCase):
         c = change()
         c["evidence"].update({"planning": {"kind": "full", "reference": "spec/1"}, "risk_analysis": "Affected authority and recovery analysed", "review_plan": "Independent review required"})
         paths = ["MyEA/Core/Auth.swift"]
-        self.assertEqual(evaluate(POLICY, c, paths, "before_delegation")["result"], "satisfied")
+        self.assertEqual(evaluate(POLICY, c, paths, "before_delegation")["result"], "metadata_conforming")
         self.assertEqual(evaluate(POLICY, c, paths, "before_merge", facts())["result"], "failed")
         c["evidence"]["risk_review"] = "Inspectable review artifact"
-        self.assertEqual(evaluate(POLICY, c, paths, "before_merge", facts())["result"], "satisfied")
+        f = facts(); f["base_sha"] = "b"*40
+        from review_fixtures import bundle, subject
+        expected = subject(SHA, "b"*40, ["security"]); expected["change_id"] = c["id"]
+        f.update({k:expected[k] for k in ("builder_id","builder_session_id")})
+        f["review_bundle"] = bundle(expected)
+        self.assertEqual(evaluate(POLICY, c, paths, "before_merge", f)["result"], "metadata_conforming")
         c["evidence"].update({"readiness": "Ready", "rollback": "Safe recovery", "containment": "Disable affected route", "follow_up": "Named owner to observe outcome"})
-        f = facts(); f["release_authorization"] = {"actor": "tmlau8", "actor_type": "User", "commit": SHA, "reference": "release decision"}
-        self.assertEqual(evaluate(POLICY, c, paths, "before_release", f)["result"], "satisfied")
+        f["release_authorization"] = {"actor": "tmlau8", "actor_type": "User", "commit": SHA, "reference": "release decision"}
+        self.assertEqual(evaluate(POLICY, c, paths, "before_release", f)["result"], "metadata_conforming")
 
 
 if __name__ == "__main__":
