@@ -1,8 +1,7 @@
 # GUARD-005 verification — 27 November 2026
 
 The mandatory controller is implemented for the explicitly launched Codex CLI
-route. **Senior Concierge activation is still pending its owner adoption decision
-and a clean reviewed task.** Existing Desktop chats and GitHub owner actions are
+route. **Senior Concierge’s guarded route was adopted and configured on 28 November 2026. A real implementation task still requires a clean reviewed snapshot and its separate permit.** Existing Desktop chats and GitHub owner actions are
 outside this boundary. A completed client is not an accepted feature or release.
 
 ## Implemented
@@ -77,8 +76,7 @@ reviewed scope and evidence; it is not project approval or release authority.
 
 ## Remaining owner/project decisions
 
-1. Review and merge the separately prepared governance/Senior adoption changes;
-   no merge is authorised by this record.
+1. Senior adoption PR #4 merged at `66f5743839725c7f438c8faa76e50c39f0ea81f5` under Albert’s explicit activation authorisation. Local fast-forward, externally verified manifest, approved-policy cache and registry update passed; architecture bytes were preserved. Central publication is recorded by governance PR #6.
 2. Preserve/reconcile the existing Senior architecture edits into the intended
    reviewed feature snapshot. The controller refuses dirty work rather than
    altering it automatically.

@@ -87,12 +87,18 @@ def dashboard(api_port=8769, repositories=None):
     for panel in panels:
         if panel['gridPos']['y']>=10:panel['gridPos']['y']+=12
         for child in panel.get('panels',[]):child['gridPos']['y']+=12
-    table('Guarded task gates · decisions, review records and execution boundary','execution',10,12,
+    table('Task gate history · recorded decisions and required actions','execution',10,12,
         'Only tasks launched through the owner controller are in scope. Operator decisions are not authenticated human identity. Completed means client exit, not acceptance. Empty means no recorded task; no enforcement inferred.')
     for field,width in [('Task',210),('Gate',190)]:
         panels[-1]['fieldConfig']['overrides'].append({'matcher':{'id':'byName','options':field},'properties':[{'id':'custom.width','value':width}]})
     table('Full guarded task evidence · revisions, review records and limits','execution',193,12,
         'Complete raw decisions and declared identity/evidence limits; completed means client exit, not acceptance.',detailed=True)
+    coverage=next(p for p in panels if p['title'].startswith('Repository coverage'))
+    previous_y=coverage['gridPos']['y'];height=coverage['gridPos']['h']
+    for panel in panels:
+        if 10<=panel['gridPos']['y']<previous_y:panel['gridPos']['y']+=height
+    coverage['gridPos']['y']=10
+    coverage['title']='Current approved policy · registered repository workspaces'
     return {"uid": UID, "title": "Agentic Engineering · Evidence & Usage", "schemaVersion": 41, "version": 1, "timezone": "browser", "refresh": "30s", "time": {"from": "now-30d", "to": "now"},
         "editable": False, "timepicker": {"hidden": True}, "tags": ["engineering-governance", "local-pilot"], "panels": panels,
         "templating": {"list": [{"name": "repo", "label": "Repository", "type": "custom", "query": ','.join(repositories), "current": {"text": "all", "value": "all"}, "options": [{"text": v, "value": v, "selected": v == "all"} for v in repositories], "hide": 0}]}}
