@@ -110,3 +110,14 @@ The successful mock case now uses an explicit empty discovery fixture; a separat
 snapshot-failure assertion preserves completed__usage_unavailable and its stored
 observation. Independent Quality inspected/reran this correction (19 controller
 tests passed). No production check or expected rejection was weakened.
+
+On 28 November Albert explicitly authorised the needed merges and Senior Concierge
+governance activation. This authorises applying the reviewed baseline and local
+control setup; feature-specific task decisions, platform evidence and release
+remain separate. The optional native integration check in
+`tests/check_guard_task_runtime.py` passed: real preparation, rejection before
+approval, exact approval, native scoped file edit and rejected reuse, with only
+local fixture model transport and test-home isolation. No real model requests,
+project tasks or synthetic dashboard records were created. Independent Quality
+reviewed this integration test. Final remote matrix: all 170 tests passed on
+Python 3.9 and 3.12; Senior adoption CI passed.

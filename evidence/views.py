@@ -214,7 +214,10 @@ def activity_totals(store,repo,by_round=False):
 
 
 def execution(store,repo):
-    return [{'Task':r['task'],'Repository':r['repository'],'Gate state':r['state'],
+    actions={'prepared':'Inspect evidence and approve the exact task permit.','approved':'Launch through the guarded controller.','claimed':'Execution claimed; completion is not confirmed.','completed':'Inspect results and obtain post-change reviews.','prelaunch_rejected':'Prepare a new permit against the current source.','launch_blocked':'Resolve the launch blocker; prepare a new permit.'}
+    return [{'Task':r['task'],'Repository':r['repository'],
+             'Gate':('Owner decision required' if r['last_decision']=='PROJECT_ADOPTION_PENDING_OWNER_DECISION' else r['state'].replace('_',' ')),
+             'Required action':('Review adoption; then prepare a clean, reviewed task.' if r['last_decision']=='PROJECT_ADOPTION_PENDING_OWNER_DECISION' else 'Preserve and reconcile existing changes before requesting a task.' if r['last_decision']=='SOURCE_NOT_CLEAN' else actions.get(r['state'],'Inspect the decision and resolve its blocker.')), 'Gate state':r['state'],
              'Last decision':r['last_decision'],'Profile':r['profile'],'Risk':r['risk'],
              'Reviewed revision':r['head_sha'],'Review records':', '.join(r['review_record_ids']),
              'Review assurance':r['review_assurance'],'Identity assurance':r['authority'],
